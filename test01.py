@@ -13,8 +13,8 @@ y = 2 * X['x1']**2 + 3 * X['x2'] - X['x3'] + np.random.randn(100) * 0.1
 # 创建和训练模型
 model = SissoRegressor(
     K=2,  # 最大复杂度层数
-    operators=['+', '-', '*', 'safe_div', 'sqrt', 'square', 'log'],
-    sis_screener='random',  # 筛选方法
+    operators=['+', '-', '*', 'safe_div', 'sqrt', 'square', 'log','exp','abs','sin','cos','tan','sinh','cosh','tanh','reciprocal'],
+    sis_screener='mutual_info',  # 筛选方法
     sis_topk=1000,  # SIS 保留特征数
     so_solver='lasso',  # 稀疏求解器
     so_max_terms=2,  # 最终模型最大项数

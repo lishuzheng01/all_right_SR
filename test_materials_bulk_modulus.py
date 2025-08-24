@@ -168,10 +168,10 @@ def run_sisso_analysis(X, y):
         
         try:
             model = SissoRegressor(
-                K=5,  # 复杂度层数
+                K=1,  # 复杂度层数
                 operators=['+', '-', '*', 'safe_div', 'sqrt', 'square', 'log','exp','abs','reciprocal'],
                 sis_screener=method,
-                sis_topk=20,  # 筛选前20个特征
+                sis_topk=5,  # 筛选前20个特征
                 so_solver='lasso',
                 so_max_terms=2,  # 最大4项
                 cv=5,

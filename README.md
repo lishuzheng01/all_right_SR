@@ -37,7 +37,7 @@ numba >= 0.56.0  # 用于性能加速
 
 ```bash
 # 1. 克隆或进入项目目录
-git clone https://github.com/your-username/sisso-py.git
+git clone https://github.com/lishuzheng01/sisso-py.git
 cd sisso-py
 
 # 2. 创建虚拟环境（可选但推荐）

@@ -80,7 +80,7 @@ class FeatureGenerator:
 
             # 2. Apply binary operators
             # Combine features from all previous layers with each other
-            feature_pairs = combinations_with_replacement(candidates_from_previous_layers, 2)
+            feature_pairs = list(combinations_with_replacement(candidates_from_previous_layers, 2))
             
             for op in self.binary_ops:
                 for f1, f2 in feature_pairs:
