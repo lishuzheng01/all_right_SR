@@ -1456,8 +1456,8 @@ model.fit(X, y)  # 将输出详细的调试信息
 
 ## 📞 联系方式
 
-- 项目主页: <https://github.com/your-username/sisso-py>
-- 问题报告: <https://github.com/your-username/sisso-py/issues>
+- 项目主页: <https://github.com/lishuzheng01/sisso-py>
+- 问题报告: <https://github.com/lishuzheng01/sisso-py/issues>
 - 邮箱: <3035326878@qq.com>
 
 ---
