@@ -1,0 +1,17 @@
+# 开发依赖
+pytest>=6.0
+pytest-cov>=2.10
+black>=21.0
+flake8>=3.8
+isort>=5.0
+mypy>=0.800
+
+# 文档生成
+sphinx>=4.0
+sphinx-rtd-theme>=1.0
+nbsphinx>=0.8
+
+# Jupyter notebook支持
+jupyter>=1.0
+matplotlib>=3.3.0
+seaborn>=0.11.0

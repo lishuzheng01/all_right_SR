@@ -1,0 +1,24 @@
+include README.md
+include LICENSE
+include requirements.txt
+include requirements-dev.txt
+include sisso计算库技术方案.md
+
+# 包含所有Python文件
+recursive-include sisso_py *.py
+recursive-include sisso_py *.pyx
+recursive-include sisso_py *.pxd
+
+# 包含测试文件
+recursive-include tests *.py
+
+# 包含文档文件
+recursive-include docs *.py *.rst *.md *.txt *.bat
+
+# 排除不需要的文件
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude __pycache__
+global-exclude .git*
+global-exclude .DS_Store

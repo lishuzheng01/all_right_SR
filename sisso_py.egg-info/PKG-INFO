@@ -1,0 +1,616 @@
+Metadata-Version: 2.4
+Name: sisso-py
+Version: 0.1.0
+Summary: Python implementation of Sure Independence Screening and Sparsifying Operator (SISSO)
+Home-page: https://github.com/your-username/sisso-py
+Author: SISSO-Py Team
+Author-email: SISSO-Py Team <3035326878@qq.com>
+License: Apache License
+        Version 2.0, January 2004
+        http://www.apache.org/licenses/
+        
+        TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+        
+        1. Definitions.
+        
+           "License" shall mean the terms and conditions for use, reproduction,
+           and distribution as defined by Sections 1 through 9 of this document.
+        
+           "Licensor" shall mean the copyright owner or entity granting the License.
+        
+           "Legal Entity" shall mean the union of the acting entity and all
+           other entities that control, are controlled by, or are under common
+           control with that entity. For the purposes of this definition,
+           "control" means (i) the power, direct or indirect, to cause the
+           direction or management of such entity, whether by contract or
+           otherwise, or (ii) ownership of fifty percent (50%) or more of the
+           outstanding shares, or (iii) beneficial ownership of such entity.
+        
+           "You" (or "Your") shall mean an individual or Legal Entity
+           exercising permissions granted by this License.
+        
+           "Source" form shall mean the preferred form for making modifications,
+           including but not limited to software source code, documentation
+           source, and configuration files.
+        
+           "Object" form shall mean any form resulting from mechanical
+           transformation or translation of a Source form, including but
+           not limited to compiled object code, generated documentation,
+           and conversions to other media types.
+        
+           "Work" shall mean the work of authorship, whether in Source or
+           Object form, made available under the License, as indicated by a
+           copyright notice that is included in or attached to the work
+           (which shall not include communication that is conspicuously
+           marked or otherwise designated in writing by the copyright owner
+           as "Not a Work").
+        
+           "Derivative Works" shall mean any work, whether in Source or Object
+           form, that is based upon (or derived from) the Work and for which the
+           editorial revisions, annotations, elaborations, or other modifications
+           represent, as a whole, an original work of authorship. For the purposes
+           of this License, Derivative Works shall not include works that remain
+           separable from, or merely link (or bind by name) to the interfaces of,
+           the Work and derivative works thereof.
+        
+           "Contribution" shall mean any work of authorship, including
+           the original version of the Work and any modifications or additions
+           to that Work or Derivative Works thereof, that is intentionally
+           submitted to Licensor for inclusion in the Work by the copyright owner
+           or by an individual or Legal Entity authorized to submit on behalf of
+           the copyright owner. For the purposes of this definition, "submitted"
+           means any form of electronic, verbal, or written communication sent
+           to the Licensor or its representatives, including but not limited to
+           communication on electronic mailing lists, source code control
+           systems, and issue tracking systems that are managed by, or on behalf
+           of, the Licensor for the purpose of discussing and improving the Work,
+           but excluding communication that is conspicuously marked or otherwise
+           designated in writing by the copyright owner as "Not a Contribution."
+        
+           "Contributor" shall mean Licensor and any individual or Legal Entity
+           on behalf of whom a Contribution has been received by Licensor and
+           subsequently incorporated within the Work.
+        
+        2. Grant of Copyright License. Subject to the terms and conditions of
+           this License, each Contributor hereby grants to You a perpetual,
+           worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+           copyright license to use, reproduce, modify, distribute, and prepare
+           Derivative Works of, and publicly display, publicly perform,
+           sublicense, and distribute the Work and such Derivative Works in
+           Source or Object form.
+        
+        Copyright 2024 SISSO-Py Team
+        
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+        
+            http://www.apache.org/licenses/LICENSE-2.0
+        
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+        
+Project-URL: Homepage, https://github.com/your-username/sisso-py
+Project-URL: Repository, https://github.com/your-username/sisso-py.git
+Project-URL: Issues, https://github.com/your-username/sisso-py/issues
+Keywords: symbolic regression,feature selection,SISSO,machine learning,physics
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Scientific/Engineering :: Physics
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.19.0
+Requires-Dist: scipy>=1.7.0
+Requires-Dist: scikit-learn>=1.0.0
+Requires-Dist: pandas>=1.3.0
+Requires-Dist: tqdm>=4.60.0
+Provides-Extra: full
+Requires-Dist: sympy>=1.9.0; extra == "full"
+Requires-Dist: joblib>=1.1.0; extra == "full"
+Requires-Dist: numba>=0.56.0; extra == "full"
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov>=2.10; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.8; extra == "dev"
+Requires-Dist: isort>=5.0; extra == "dev"
+Requires-Dist: mypy>=0.800; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: sphinx>=4.0; extra == "docs"
+Requires-Dist: sphinx-rtd-theme>=1.0; extra == "docs"
+Requires-Dist: nbsphinx>=0.8; extra == "docs"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# SISSO-Py: Python Implementation of Sure Independence Screening and Sparsifying Operator
+
+SISSO-Py 是 SISSO（Sure Independence Screening and Sparsifying Operator）算法的纯 Python 实现。SISSO 是一种用于符号回归和特征发现的机器学习方法，特别适用于从有限数据中发现简洁且物理意义明确的数学公式。
+
+## 🌟 主要特性
+
+- **符号特征生成**：通过组合基础操作符生成复杂的符号特征
+- **分层复杂度控制**：基于 K 层架构，精确控制特征复杂度
+- **多种筛选方法**：支持皮尔逊相关性、互信息等特征筛选策略
+- **稀疏建模**：集成 OMP、Lasso、ElasticNet 等稀疏回归方法
+- **物理量纲检查**：可选的量纲一致性验证，确保物理意义
+- **丰富的操作符库**：包含代数、幂函数、对数、三角函数、双曲函数等
+- **自定义函数支持**：支持用户定义的自定义操作符
+- **全面的日志系统**：详细的运行过程记录和结果报告
+
+## 📦 安装
+
+### 依赖要求
+
+```python
+# 必需依赖
+numpy >= 1.19.0
+scipy >= 1.7.0
+scikit-learn >= 1.0.0
+pandas >= 1.3.0
+tqdm >= 4.60.0
+
+# 可选依赖
+sympy >= 1.9.0  # 用于符号表达式处理
+joblib >= 1.1.0  # 用于并行计算
+numba >= 0.56.0  # 用于性能加速
+```
+
+### 安装方法
+
+```bash
+# 克隆仓库
+git clone https://github.com/your-username/sisso-py.git
+cd sisso-py
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 安装包（开发模式）
+pip install -e .
+```
+
+## 🚀 快速开始
+
+### 基础用法
+
+```python
+import numpy as np
+import pandas as pd
+from sisso_py import SissoRegressor
+
+# 准备数据
+X = pd.DataFrame({
+    'x1': np.random.randn(100),
+    'x2': np.random.randn(100),
+    'x3': np.random.randn(100)
+})
+y = 2 * X['x1']**2 + 3 * X['x2'] - X['x3'] + np.random.randn(100) * 0.1
+
+# 创建和训练模型
+model = SissoRegressor(
+    K=3,  # 最大复杂度层数
+    operators=['+', '-', '*', 'safe_div', 'sqrt', 'square', 'log'],
+    sis_screener='pearson',  # 筛选方法
+    sis_topk=1000,  # SIS 保留特征数
+    so_solver='omp',  # 稀疏求解器
+    so_max_terms=5,  # 最终模型最大项数
+    cv=5  # 交叉验证折数
+)
+
+# 拟合模型
+model.fit(X, y)
+
+# 预测
+y_pred = model.predict(X)
+
+# 获取解释和报告
+report = model.explain()
+print("最佳公式:", report['results']['final_model']['formula_latex'])
+print("模型系数:", report['results']['final_model']['features'])
+```
+
+### 带物理量纲检查的用法
+
+```python
+from sisso_py import SissoRegressor
+from sisso_py.dsl.dimension import Dimension
+
+# 定义物理量纲 (质量M, 长度L, 时间T, 电流I, 温度Θ, 物质量N, 发光强度J)
+length_dim = Dimension([0, 1, 0, 0, 0, 0, 0])  # 长度 L
+time_dim = Dimension([0, 0, 1, 0, 0, 0, 0])    # 时间 T
+velocity_dim = Dimension([0, 1, -1, 0, 0, 0, 0])  # 速度 L/T
+
+# 准备带量纲的数据
+feature_dimensions = {
+    'distance': length_dim,
+    'time': time_dim,
+    'initial_velocity': velocity_dim
+}
+
+model = SissoRegressor(
+    K=2,
+    dimensional_check=True,  # 启用量纲检查
+    operators=['+', '-', '*', 'safe_div', 'square']
+)
+
+# 拟合时传入量纲信息
+model.fit(X, y, 
+          feature_dimensions=feature_dimensions,
+          target_dimension=length_dim)  # 目标是长度量纲
+```
+
+### 使用自定义操作符
+
+```python
+import numpy as np
+
+def gaussian(x):
+    """高斯函数"""
+    return np.exp(-x**2)
+
+def sigmoid(x):
+    """Sigmoid 函数"""
+    return 1 / (1 + np.exp(-x))
+
+# 方式1: 直接传入函数
+model = SissoRegressor(
+    K=2,
+    operators=[
+        '+', '-', '*', 'safe_div',
+        gaussian,  # 直接传入函数
+        sigmoid
+    ]
+)
+
+# 方式2: 传入函数和配置的元组
+model = SissoRegressor(
+    K=2,
+    operators=[
+        '+', '-', '*', 'safe_div',
+        (gaussian, {'name': 'gauss', 'complexity_cost': 3}),
+        (sigmoid, {'name': 'sig', 'complexity_cost': 4})
+    ]
+)
+```
+
+## 📊 完整示例
+
+### 例1：Kepler 第三定律发现
+
+```python
+import numpy as np
+import pandas as pd
+from sisso_py import SissoRegressor
+from sisso_py.dsl.dimension import Dimension
+
+# 生成开普勒定律数据: T^2 ∝ a^3
+np.random.seed(42)
+n_samples = 50
+
+# 半长轴 (天文单位)
+a = np.random.uniform(0.5, 5.0, n_samples)
+# 周期 (年)，加入噪声
+T = np.sqrt(a**3) + np.random.normal(0, 0.05, n_samples)
+
+# 创建数据框
+data = pd.DataFrame({
+    'semi_major_axis': a,
+    'orbital_period': T
+})
+
+# 定义量纲
+length_dim = Dimension([0, 1, 0, 0, 0, 0, 0])  # L
+time_dim = Dimension([0, 0, 1, 0, 0, 0, 0])    # T
+
+feature_dims = {'semi_major_axis': length_dim}
+target_dim = time_dim
+
+# 训练模型
+model = SissoRegressor(
+    K=3,
+    operators=['+', '-', '*', 'safe_div', 'sqrt', 'square', 'poly3'],
+    dimensional_check=True,
+    sis_topk=500,
+    so_max_terms=3
+)
+
+X = data[['semi_major_axis']]
+y = data['orbital_period']
+
+model.fit(X, y, feature_dimensions=feature_dims, target_dimension=target_dim)
+
+# 查看结果
+report = model.explain()
+print("发现的公式:", report['results']['final_model']['formula_latex'])
+print("复杂度:", report['run_info']['features_in_final_model'])
+```
+
+### 例2：数据驱动的物理公式发现
+
+```python
+import numpy as np
+import pandas as pd
+from sisso_py import SissoRegressor
+
+# 模拟数据：能量公式 E = 1/2 * m * v^2
+np.random.seed(123)
+n = 200
+
+mass = np.random.uniform(1, 10, n)
+velocity = np.random.uniform(0, 20, n)
+energy = 0.5 * mass * velocity**2 + np.random.normal(0, 0.1, n)
+
+data = pd.DataFrame({
+    'mass': mass,
+    'velocity': velocity,
+    'energy': energy
+})
+
+# 不使用量纲检查的简单模式
+model = SissoRegressor(
+    K=3,
+    operators=['+', '-', '*', 'safe_div', 'square', 'sqrt'],
+    sis_screener='mutual_info',  # 使用互信息筛选
+    sis_topk=1000,
+    so_solver='lasso',  # 使用 Lasso 求解器
+    so_max_terms=3,
+    cv=10
+)
+
+X = data[['mass', 'velocity']]
+y = data['energy']
+
+model.fit(X, y)
+
+# 获取详细报告
+report = model.explain()
+print("模型配置:", report['configuration'])
+print("最终公式:", report['results']['final_model']['formula_latex'])
+print("特征信息:")
+for feature in report['results']['final_model']['features']:
+    print(f"  {feature['signature']}: 系数={feature['coefficient']:.4f}, 复杂度={feature['complexity']}")
+
+print(f"\n生成特征总数: {report['run_info']['total_features_generated']}")
+print(f"SIS后特征数: {report['run_info']['features_after_sis']}")
+print(f"最终模型特征数: {report['run_info']['features_in_final_model']}")
+```
+
+## 🔧 高级配置
+
+### 操作符配置
+
+```python
+# 内置操作符
+AVAILABLE_OPERATORS = [
+    # 基础代数
+    '+', '-', '*', 'safe_div',
+    
+    # 幂和根
+    'sqrt', 'cbrt', 'square', 'poly2', 'poly3',
+    
+    # 对数和指数
+    'log', 'log10', 'exp',
+    
+    # 绝对值和符号
+    'abs', 'sign',
+    
+    # 三角函数
+    'sin', 'cos',
+    
+    # 双曲函数
+    'sinh', 'cosh', 'tanh',
+    
+    # 物理相关
+    'reciprocal'
+]
+
+# 自定义复杂度权重
+model = SissoRegressor(
+    operators=[
+        '+',     # 复杂度 1
+        '*',     # 复杂度 1  
+        'sqrt',  # 复杂度 2
+        'log',   # 复杂度 2
+        'sin',   # 复杂度 3
+    ]
+)
+```
+
+### 筛选策略配置
+
+```python
+# 不同的特征筛选方法
+model_pearson = SissoRegressor(sis_screener='pearson')      # 皮尔逊相关系数
+model_mi = SissoRegressor(sis_screener='mutual_info')       # 互信息
+
+# 筛选参数调整
+model = SissoRegressor(
+    sis_topk=2000,      # 每层保留的特征数
+    K=4,                # 最大层数
+    so_max_terms=5      # 最终模型最大项数
+)
+```
+
+### 稀疏求解器配置
+
+```python
+# OMP (Orthogonal Matching Pursuit)
+model_omp = SissoRegressor(
+    so_solver='omp',
+    so_max_terms=3
+)
+
+# Lasso
+model_lasso = SissoRegressor(
+    so_solver='lasso',
+    # Lasso 会根据 alpha 参数自动确定特征数
+)
+
+# ElasticNet
+model_en = SissoRegressor(
+    so_solver='elasticnet',
+    # 结合 L1 和 L2 正则化
+)
+```
+
+## 📈 结果导出和可视化
+
+### 导出公式
+
+```python
+from sisso_py.io import export_to_latex, export_to_sympy, export_to_json
+
+# 导出为 LaTeX
+latex_formula = export_to_latex(model)
+print("LaTeX 公式:", latex_formula)
+
+# 导出为 SymPy 对象
+sympy_expr = export_to_sympy(model)
+print("SymPy 表达式:", sympy_expr)
+
+# 导出完整报告为 JSON
+export_to_json(model, "sisso_report.json")
+```
+
+### 数据接口
+
+```python
+from sisso_py.io import load_from_pandas, load_from_numpy
+
+# 从 pandas DataFrame 加载
+df = pd.read_csv("data.csv")
+X, y = load_from_pandas(df, target_column='target')
+
+# 从 NumPy 数组加载
+X_np = np.random.randn(100, 3)
+y_np = np.random.randn(100)
+X, y = load_from_numpy(X_np, y_np, feature_names=['f1', 'f2', 'f3'])
+```
+
+## ⚙️ 性能优化
+
+### 并行计算
+
+```python
+model = SissoRegressor(
+    n_jobs=-1,  # 使用所有可用 CPU 核心
+    # n_jobs=4   # 或指定具体核心数
+)
+```
+
+### 内存和复杂度控制
+
+```python
+model = SissoRegressor(
+    K=2,                # 降低层数减少特征数量
+    sis_topk=500,       # 减少筛选特征数
+    so_max_terms=3,     # 限制最终模型复杂度
+)
+```
+
+## 🐛 故障排除
+
+### 常见问题
+
+1. **内存不足**
+
+   ```python
+   # 解决方案：减少特征生成数量
+   model = SissoRegressor(K=2, sis_topk=500)
+   ```
+
+2. **量纲检查错误**
+
+   ```python
+   # 确保量纲定义正确
+   length_dim = Dimension([0, 1, 0, 0, 0, 0, 0])  # [M, L, T, I, Θ, N, J]
+   ```
+
+3. **收敛问题**
+
+   ```python
+   # 尝试不同的求解器
+   model = SissoRegressor(so_solver='lasso')  # 或 'elasticnet'
+   ```
+
+### 调试模式
+
+```python
+from sisso_py.utils.logging import setup_logging
+import logging
+
+# 启用详细日志
+setup_logging(level=logging.DEBUG)
+
+model = SissoRegressor(...)
+model.fit(X, y)  # 将输出详细的调试信息
+```
+
+## 📚 API 参考
+
+### SissoRegressor 参数
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| K | int | 2 | 最大复杂度层数 |
+| operators | List | DEFAULT_OPERATORS | 使用的操作符列表 |
+| sis_screener | str | 'pearson' | 特征筛选方法 |
+| sis_topk | int | 2000 | SIS 保留的特征数 |
+| so_solver | str | 'omp' | 稀疏求解器类型 |
+| so_max_terms | int | 3 | 最终模型最大项数 |
+| cv | int | 5 | 交叉验证折数 |
+| dimensional_check | bool | False | 是否启用量纲检查 |
+| random_state | int | 42 | 随机种子 |
+| n_jobs | int | -1 | 并行作业数 |
+
+### 主要方法
+
+- `fit(X, y, feature_dimensions=None, target_dimension=None)`: 训练模型
+- `predict(X)`: 进行预测  
+- `explain()`: 获取模型解释和报告
+
+## 🤝 贡献指南
+
+欢迎贡献代码！请遵循以下步骤：
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送分支 (`git push origin feature/amazing-feature`)
+5. 开启 Pull Request
+
+## 📄 许可证
+
+本项目采用 Apach 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+## 🙏 致谢
+
+- 感谢 SISSO 算法的原始作者
+- 感谢 scikit-learn 社区提供的优秀机器学习框架
+- 感谢所有贡献者和用户的支持
+
+## 📞 联系方式
+
+- 项目主页: <https://github.com/your-username/sisso-py>
+- 问题报告: <https://github.com/your-username/sisso-py/issues>
+- 邮箱: <3035326878@qq.com>
+
+---
+
+**SISSO-Py**: 让符号回归和公式发现变得简单! 🚀
