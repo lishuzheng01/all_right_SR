@@ -1,3 +1,169 @@
+# AllRight-SR: 多策略符号回归工具箱
+
+## 项目说明
+AllRight-SR 集成了多种符号回归算法，包括进化算法、稀疏建模、贝叶斯推断、强化学习以及多种混合优化方法，帮助用户从数据中自动发现符合物理意义的解析公式。
+
+## 使用方法
+以下示例默认已准备好训练数据 `X` (pandas.DataFrame) 和目标 `y` (pandas.Series)。
+所有回归器可以通过 `create_regressor` 工厂方法实例化并保持统一的 `fit`/`predict` 接口：
+
+```python
+from sisso_py import create_regressor
+model = create_regressor("sisso", K=2)
+model.fit(X, y)
+pred = model.predict(X)
+```
+
+当前支持的名称包括：`gp`、`ga_pso`、`sisso`、`lasso`、`sindy`、`bsr`、`ppi`、`rl`、`dsr`、`neural_hybrid`、`evo_gradient`、`physics`、`multi_objective`。
+
+### 进化算法类
+#### 遗传编程 (GP)
+```python
+from sisso_py import create_regressor
+model = create_regressor("gp", population_size=50, n_generations=10)
+model.fit(X, y, feature_names=X.columns)
+pred = model.predict(X)
+```
+
+#### 遗传算法+PSO混合
+```python
+from sisso_py import create_regressor
+model = create_regressor("ga_pso", generations=30)
+model.fit(X, y)
+pred = model.predict(X)
+```
+
+### 稀疏建模类
+#### SISSO 基础
+```python
+from sisso_py import create_regressor
+model = create_regressor("sisso", K=3, sis_screener='pearson', so_solver='omp')
+model.fit(X, y)
+```
+
+#### SISSO 筛选器: pearson
+```python
+from sisso_py import create_regressor
+create_regressor("sisso", sis_screener='pearson').fit(X, y)
+```
+
+#### SISSO 筛选器: f_regression
+```python
+from sisso_py import create_regressor
+create_regressor("sisso", sis_screener='f_regression').fit(X, y)
+```
+
+#### SISSO 筛选器: mutual_info
+```python
+from sisso_py import create_regressor
+create_regressor("sisso", sis_screener='mutual_info').fit(X, y)
+```
+
+#### SISSO 求解器: omp
+```python
+from sisso_py import create_regressor
+create_regressor("sisso", so_solver='omp').fit(X, y)
+```
+
+#### SISSO 求解器: lasso
+```python
+from sisso_py import create_regressor
+create_regressor("sisso", so_solver='lasso').fit(X, y)
+```
+
+#### SISSO 求解器: elasticnet
+```python
+from sisso_py import create_regressor
+create_regressor("sisso", so_solver='elasticnet').fit(X, y)
+```
+
+#### SISSO 维度检查
+```python
+from sisso_py import create_regressor
+from sisso_py.dsl.dimension import Dimension
+dims = {'x1': Dimension([1,0,0,0,0,0,0])}
+target_dim = Dimension([1,0,0,0,0,0,0])
+create_regressor("sisso", dimensional_check=True).fit(X, y, feature_dimensions=dims, target_dimension=target_dim)
+```
+
+#### LASSO稀疏回归
+```python
+from sisso_py import create_regressor
+model = create_regressor("lasso", alpha=0.01)
+model.fit(X, y)
+```
+
+#### SINDy
+```python
+from sisso_py import create_regressor
+model = create_regressor("sindy", poly_degree=3)
+model.fit(X, y)
+equation = model.get_equation()
+```
+
+### 贝叶斯概率类
+#### 贝叶斯符号回归 (MCMC)
+```python
+from sisso_py import create_regressor
+model = create_regressor("bsr", n_iter=2000)
+model.fit(X, y)
+info = model.get_model_info()
+```
+
+#### 概率程序归纳 (PCFG)
+```python
+from sisso_py import create_regressor
+model = create_regressor("ppi", n_iterations=500)
+model.fit(X, y)
+info = model.get_model_info()
+```
+
+### 强化学习类
+#### 强化学习符号回归
+```python
+from sisso_py import create_regressor
+model = create_regressor("rl", max_episodes=50)
+model.fit(X.values, y.values, feature_names=X.columns)
+```
+
+#### 深度符号回归
+```python
+from sisso_py import create_regressor
+model = create_regressor("dsr", epochs=20)
+model.fit(X.values, y.values, feature_names=X.columns)
+```
+
+#### 神经符号混合
+```python
+from sisso_py import create_regressor
+model = create_regressor("neural_hybrid", symbolic_component='gp')
+model.fit(X.values, y.values, feature_names=X.columns)
+```
+
+### 混合新兴类
+#### 进化+梯度混合
+```python
+from sisso_py import create_regressor
+model = create_regressor("evo_gradient", evolution_phase_generations=10)
+model.fit(X.values, y.values, feature_names=X.columns)
+```
+
+#### 物理约束符号回归
+```python
+from sisso_py import create_regressor
+model = create_regressor("physics", dimensional_analysis=False)
+model.fit(X.values, y.values, feature_names=X.columns)
+```
+
+#### 多目标符号回归
+```python
+from sisso_py import create_regressor
+model = create_regressor("multi_objective", n_generations=10)
+model.fit(X.values, y.values, feature_names=X.columns)
+```
+
+---
+
 # SISSO-Py: Python Implementation of Sure Independence Screening and Sparsifying Operator
 
 SISSO-Py 是 SISSO（Sure Independence Screening and Sparsifying Operator）算法的纯 Python 实现。SISSO 是一种用于符号回归和特征发现的机器学习方法，特别适用于从有限数据中发现简洁且物理意义明确的数学公式。
