@@ -4,7 +4,30 @@
 AllRight-SR 集成了多种符号回归算法，包括进化算法、稀疏建模、贝叶斯推断、强化学习以及多种混合优化方法，帮助用户从数据中自动发现符合物理意义的解析公式。
 
 ## 使用方法
-以下示例默认已准备好训练数据 `X` (pandas.DataFrame) 和目标 `y` (pandas.Series)。
+以下示例默认已准备好训练数据 `X` 和目标 `y`。库现已支持 **NumPy** 数组与 **pandas** DataFrame/Series，
+并会在内部自动转换，因此可以在训练和预测时自由混合使用。
+
+### 多种输入格式示例
+```python
+import numpy as np
+import pandas as pd
+from sisso_py.sparse_regression.sisso import SISSORegressor
+
+# 方式1: 使用 NumPy 数组
+X = np.linspace(-2*np.pi, 2*np.pi, 100)
+y = np.sin(X)
+model = SISSORegressor(K=2)
+model.fit(X, y)  # 自动转换
+
+# 方式2: 使用 pandas 对象
+X_df = pd.DataFrame(X.reshape(-1, 1), columns=['x'])
+y_series = pd.Series(y, name='y')
+model.fit(X_df, y_series)
+
+# 方式3: 混合格式
+model.fit(X, y)      # NumPy 训练
+model.predict(X_df)  # pandas 预测
+```
 
 ### 进化算法类
 #### 遗传编程 (GP)
