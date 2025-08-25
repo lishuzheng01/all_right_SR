@@ -17,6 +17,7 @@ from ..sis.screening import SIS
 from ..sis.so import SparsifyingOperator
 from ..config import DEFAULT_OPERATORS, RANDOM_STATE
 from ..model.report import build_report
+from ..utils.data_conversion import auto_convert_input, validate_input_shapes
 
 logger = logging.getLogger(__name__)
 
@@ -118,27 +119,41 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
             cv=self.cv
         )
 
-    def fit(self, X: pd.DataFrame, y: pd.Series, 
+    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series, list], 
             feature_dimensions: Optional[Dict[str, Dimension]] = None,
-            target_dimension: Optional[Dimension] = None):
+            target_dimension: Optional[Dimension] = None,
+            feature_names: Optional[List[str]] = None):
         """
         拟合SISSO模型
         
         参数:
         -----
-        X : pd.DataFrame
-            输入特征
+        X : np.ndarray or pd.DataFrame
+            输入特征，支持numpy数组和pandas DataFrame
             
-        y : pd.Series
-            目标变量
+        y : np.ndarray, pd.Series or list
+            目标变量，支持numpy数组、pandas Series和列表
             
         feature_dimensions : Dict[str, Dimension], 可选
             特征的物理量纲字典
             
         target_dimension : Dimension, 可选
             目标变量的物理量纲
+            
+        feature_names : List[str], 可选
+            特征名称列表，仅在输入为numpy数组时需要
         """
         logger.info("开始SISSO模型训练...")
+        
+        # 验证输入形状
+        validate_input_shapes(X, y)
+        
+        # 自动转换输入为pandas格式
+        X, y = auto_convert_input(X, y, feature_names)
+        
+        # 存储原始数据
+        self.X_original_ = X
+        self.y_original_ = y
         
         # 初始化组件
         self._initialize_components()
@@ -189,14 +204,18 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
         
         return self
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+    def predict(self, X: Union[np.ndarray, pd.DataFrame], 
+                feature_names: Optional[List[str]] = None) -> np.ndarray:
         """
         使用训练好的模型进行预测
         
         参数:
         -----
-        X : pd.DataFrame
-            输入特征
+        X : np.ndarray or pd.DataFrame
+            输入特征，支持numpy数组和pandas DataFrame
+            
+        feature_names : List[str], 可选
+            特征名称列表，仅在输入为numpy数组时需要
             
         返回:
         -----
@@ -206,6 +225,17 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
         if not self.solver or not self.final_model_info:
             raise RuntimeError("模型尚未训练，请先调用fit方法")
         
+        # 验证输入形状并转换为pandas格式
+        from ..utils.data_conversion import ensure_pandas_dataframe
+        X_df = ensure_pandas_dataframe(X, feature_names)
+        
+        # 如果特征名称不匹配训练时的特征，尝试对齐
+        if hasattr(self, 'X_original_') and not X_df.columns.equals(self.X_original_.columns):
+            if len(X_df.columns) == len(self.X_original_.columns):
+                X_df.columns = self.X_original_.columns
+            else:
+                raise ValueError(f"特征数量不匹配。训练时: {len(self.X_original_.columns)}, 预测时: {len(X_df.columns)}")
+        
         # 获取选定的特征名
         selected_feature_names = self.final_model_info.get('selected_features', [])
         
@@ -214,7 +244,7 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
                            if expr.get_signature() in selected_feature_names]
         
         # 评估特征
-        X_eval, _ = self.evaluator.evaluate(selected_exprs, X)
+        X_eval, _ = self.evaluator.evaluate(selected_exprs, X_df)
         
         # 预测
         return self.solver.predict(X_eval)

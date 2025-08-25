@@ -15,6 +15,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import r2_score, mean_squared_error
 
 from ..config import RANDOM_STATE
+from ..utils.data_conversion import auto_convert_input, validate_input_shapes
 
 logger = logging.getLogger(__name__)
 
@@ -175,19 +176,27 @@ class LassoRegressor(BaseSparseSolver):
         self.tol = tol
         self.cv = cv
     
-    def fit(self, X: pd.DataFrame, y: pd.Series):
+    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series, list],
+            feature_names: Optional[List[str]] = None):
         """
         拟合Lasso回归模型
         
         参数:
         -----
-        X : pd.DataFrame
-            输入特征
+        X : np.ndarray or pd.DataFrame
+            输入特征，支持numpy数组和pandas DataFrame
             
-        y : pd.Series
-            目标变量
+        y : np.ndarray, pd.Series or list
+            目标变量，支持numpy数组、pandas Series和列表
+            
+        feature_names : List[str], 可选
+            特征名称列表，仅在输入为numpy数组时需要
         """
         logger.info("开始训练Lasso回归模型...")
+        
+        # 验证输入形状并转换为pandas格式
+        validate_input_shapes(X, y)
+        X, y = auto_convert_input(X, y, feature_names)
         
         # 保存特征名
         self.feature_names_ = X.columns.tolist()
@@ -265,14 +274,18 @@ class LassoRegressor(BaseSparseSolver):
         
         return self
     
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+    def predict(self, X: Union[np.ndarray, pd.DataFrame], 
+                feature_names: Optional[List[str]] = None) -> np.ndarray:
         """
         使用训练好的模型进行预测
         
         参数:
         -----
-        X : pd.DataFrame
-            输入特征
+        X : np.ndarray or pd.DataFrame
+            输入特征，支持numpy数组和pandas DataFrame
+            
+        feature_names : List[str], 可选
+            特征名称列表，仅在输入为numpy数组时需要
             
         返回:
         -----
@@ -282,17 +295,19 @@ class LassoRegressor(BaseSparseSolver):
         if self.pipeline_ is None:
             raise RuntimeError("模型尚未训练，请先调用fit方法")
         
-        # 增强的输入验证和错误处理
-        logger.info(f"[LASSO预测] 输入数据形状: {X.shape}")
-        logger.info(f"[LASSO预测] 输入数据列: {list(X.columns) if hasattr(X, 'columns') else 'No columns'}")
+        # 验证输入形状并转换为pandas格式
+        from ..utils.data_conversion import ensure_pandas_dataframe
+        X_df = ensure_pandas_dataframe(X, feature_names)
         
-        if isinstance(X, pd.DataFrame) and X.empty:
-            raise ValueError("预测数据不能为空")
-        elif isinstance(X, np.ndarray) and X.size == 0:
+        # 增强的输入验证和错误处理
+        logger.info(f"[LASSO预测] 输入数据形状: {X_df.shape}")
+        logger.info(f"[LASSO预测] 输入数据列: {list(X_df.columns)}")
+        
+        if X_df.empty:
             raise ValueError("预测数据不能为空")
         
         # 如果输入是0行数据，直接返回空数组
-        if (isinstance(X, pd.DataFrame) and len(X) == 0) or (isinstance(X, np.ndarray) and len(X) == 0):
+        if len(X_df) == 0:
             logger.warning("[LASSO预测] 输入数据为空，返回空预测结果")
             return np.array([])
         
@@ -306,29 +321,29 @@ class LassoRegressor(BaseSparseSolver):
             
             # 手动执行多项式特征转换以检查问题
             try:
-                X_poly = poly_step.transform(X)
+                X_poly = poly_step.transform(X_df)
                 logger.info(f"[LASSO预测] 多项式特征转换后形状: {X_poly.shape}")
                 
                 if X_poly.shape[0] == 0:
-                    logger.error(f"[LASSO预测] 多项式转换产生了空数组，原始输入: {X.shape}")
-                    logger.error(f"[LASSO预测] 原始数据样本: {X.head(3) if hasattr(X, 'head') else X[:3]}")
+                    logger.error(f"[LASSO预测] 多项式转换产生了空数组，原始输入: {X_df.shape}")
+                    logger.error(f"[LASSO预测] 原始数据样本: {X_df.head(3)}")
                     raise ValueError("多项式特征转换产生了空数组")
                     
             except Exception as poly_err:
                 logger.error(f"[LASSO预测] 多项式特征转换失败: {str(poly_err)}")
-                logger.error(f"[LASSO预测] 输入数据信息: shape={X.shape}, dtype={X.dtypes if hasattr(X, 'dtypes') else X.dtype}")
-                logger.error(f"[LASSO预测] 输入数据内容: {X.head() if hasattr(X, 'head') else X}")
+                logger.error(f"[LASSO预测] 输入数据信息: shape={X_df.shape}, dtype={X_df.dtypes}")
+                logger.error(f"[LASSO预测] 输入数据内容: {X_df.head()}")
                 raise
             
             # 执行完整预测
-            result = self.pipeline_.predict(X)
+            result = self.pipeline_.predict(X_df)
             logger.info(f"[LASSO预测] 预测完成，结果形状: {result.shape}")
             return result
             
         except Exception as e:
             logger.error(f"[LASSO预测] 预测时发生错误: {str(e)}")
-            logger.error(f"[LASSO预测] 输入数据形状: {X.shape}")
-            logger.error(f"[LASSO预测] 输入数据列: {list(X.columns) if hasattr(X, 'columns') else 'No columns'}")
+            logger.error(f"[LASSO预测] 输入数据形状: {X_df.shape}")
+            logger.error(f"[LASSO预测] 输入数据列: {list(X_df.columns)}")
             logger.error(f"[LASSO预测] 管道步骤: {[step for step, _ in self.pipeline_.steps]}")
             
             # 尝试诊断问题
