@@ -1,6 +1,8 @@
 LICENSE
 MANIFEST.in
 README.md
+SCREENER_METHODS.md
+SISSO模型创建与训练指南.md
 pyproject.toml
 requirements-dev.txt
 requirements.txt
@@ -31,6 +33,7 @@ sisso_py/metrics/__init__.py
 sisso_py/metrics/regression.py
 sisso_py/metrics/symbolic.py
 sisso_py/model/__init__.py
+sisso_py/model/formatted_report.py
 sisso_py/model/pipeline.py
 sisso_py/model/report.py
 sisso_py/ops/__init__.py
@@ -48,3 +51,10 @@ sisso_py/utils/__init__.py
 sisso_py/utils/logging.py
 sisso_py/utils/parallel.py
 sisso_py/utils/seed.py
+test/demo_beautiful_report.py
+test/screener_methods_demo.py
+test/test01.py
+test/test02_improved.py
+test/test_materials_bulk_modulus.py
+test/test_screeners.py
+test/test_with_metrics.py

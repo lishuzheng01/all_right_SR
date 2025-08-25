@@ -1,0 +1,208 @@
+# -*- coding: utf-8 -*-
+"""
+基于遗传编程的符号回归实现
+"""
+
+import logging
+import random
+from typing import List, Optional
+
+import numpy as np
+import pandas as pd
+from deap import base, creator, tools, gp, algorithms
+
+from ..utils.parallel import get_parallel_backend
+from ..metrics.regression import r2_score, mean_squared_error
+from ..model.formatted_report import SissoReport as Report
+from ..ops.base import Operator
+from ..ops.algebra import Add, Sub, Mul, SafeDiv
+from ..ops.power_root import Square, Pow, Sqrt, Cbrt
+from ..ops.log_exp import SafeLog, Exp
+from ..ops.abs_sign import Abs
+from ..dsl.dimension import Dimension
+from ..utils.logging import setup_logging
+from ..config import RANDOM_STATE
+
+logger = setup_logging()
+
+def parallelize(func, iterable, n_jobs=-1):
+    """
+    Helper function to parallelize the evaluation of individuals using joblib.
+    """
+    from joblib import delayed
+    parallel = get_parallel_backend(n_jobs=n_jobs)
+    return parallel(delayed(func)(item) for item in iterable)
+
+
+class GeneticProgramming:
+    """
+    A Genetic Programming model for symbolic regression.
+    """
+    def __init__(self,
+                 population_size: int = 100,
+                 n_generations: int = 20,
+                 crossover_rate: float = 0.8,
+                 mutation_rate: float = 0.2,
+                 tournament_size: int = 3,
+                 min_depth: int = 2,
+                 max_depth: int = 5,
+                 operators: Optional[List[Operator]] = None,
+                 n_jobs: int = -1,
+                 random_state: int = RANDOM_STATE):
+        
+        self.population_size = population_size
+        self.n_generations = n_generations
+        self.crossover_rate = crossover_rate
+        self.mutation_rate = mutation_rate
+        self.tournament_size = tournament_size
+        self.min_depth = min_depth
+        self.max_depth = max_depth
+        self.operators = operators
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+
+        self._best_individual = None
+        self._log = None
+        self._feature_names = None
+        self._pset = None
+        self._toolbox = base.Toolbox()
+
+        if self.n_jobs != 1:
+            self._toolbox.register("map", parallelize, n_jobs=self.n_jobs)
+
+    def fit(self, X, y, feature_names):
+        if self.random_state is not None:
+            np.random.seed(self.random_state)
+            random.seed(self.random_state)
+
+        self._setup_primitives(feature_names)
+        self._setup_toolbox()
+        self._toolbox.register("evaluate", self._evaluate_individual, X=X, y=y)
+
+        pop = self._toolbox.population(n=self.population_size)
+        hof = tools.HallOfFame(1)
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
+
+        pop, log = algorithms.eaSimple(pop, self._toolbox, self.crossover_rate, self.mutation_rate, self.n_generations,
+                                       stats=stats, halloffame=hof, verbose=True)
+
+        self._best_individual = hof[0]
+        self._log = log
+        logger.info(f"Training finished. Best fitness: {self._best_individual.fitness.values[0]}")
+        return self
+
+    def _evaluate_individual(self, individual, X, y):
+        try:
+            func = self._toolbox.compile(expr=individual)
+            # 转换X为行的形式，每一行是一个样本
+            if isinstance(X, pd.DataFrame):
+                X_array = X.values
+            else:
+                X_array = X
+            
+            # 对每个样本计算函数值
+            y_pred = []
+            for i in range(X_array.shape[0]):
+                try:
+                    # 为每个样本传递特征值作为函数参数
+                    pred = func(*X_array[i, :])
+                    y_pred.append(pred)
+                except:
+                    y_pred.append(np.inf)
+            
+            y_pred = np.array(y_pred)
+            if np.any(np.isnan(y_pred)) or np.any(np.isinf(y_pred)):
+                return (np.inf,)
+            mse = mean_squared_error(y, y_pred)
+        except (ValueError, ZeroDivisionError, OverflowError, TypeError, MemoryError):
+            mse = np.inf
+        return (mse,)
+
+    def predict(self, X):
+        if self._best_individual is None:
+            raise RuntimeError("The model has not been trained yet. Call fit() first.")
+        func = self._toolbox.compile(expr=self._best_individual)
+        
+        # 转换X为数组形式
+        if isinstance(X, pd.DataFrame):
+            X_array = X.values
+        else:
+            X_array = X
+        
+        # 对每个样本计算函数值
+        y_pred = []
+        for i in range(X_array.shape[0]):
+            try:
+                pred = func(*X_array[i, :])
+                y_pred.append(pred)
+            except:
+                y_pred.append(0.0)  # 默认值
+        
+        return np.array(y_pred)
+
+    def get_best_model_report(self, X, y):
+        if self._best_individual is None:
+            return Report({"status": "Model not fitted."})
+        
+        y_pred = self.predict(X)
+        r2 = r2_score(y, y_pred)
+        mse = mean_squared_error(y, y_pred)
+        
+        report_data = {
+            "results": {
+                "final_model": {
+                    "formula_str": str(self._best_individual),
+                    "tree_depth": self._best_individual.height,
+                    "tree_size": len(self._best_individual),
+                },
+                "metrics": {
+                    "r2": r2,
+                    "mse": mse,
+                }
+            }
+        }
+        return Report(report_data)
+
+    def get_best_model_string(self):
+        if self._best_individual is None:
+            return "No model trained yet."
+        return str(self._best_individual)
+
+    def _setup_primitives(self, feature_names):
+        self._feature_names = feature_names
+        if self._feature_names is None:
+            raise ValueError("Feature names must be provided.")
+        self._pset = gp.PrimitiveSet("MAIN", len(self._feature_names))
+        
+        if self.operators is None:
+            self.operators = [
+                Add(), Sub(), Mul(), SafeDiv(),
+                Square(), Pow(3), Sqrt(), Cbrt(),
+                SafeLog(), Exp(), Abs()
+            ]
+            
+        for op in self.operators:
+            if isinstance(op, Operator):
+                # Use the class name as the primitive name and __call__ method
+                op_name = op.__class__.__name__.lower()
+                self._pset.addPrimitive(op, op.arity, name=op_name)
+            
+        self._pset.renameArguments(**{f"ARG{i}": name for i, name in enumerate(self._feature_names)})
+
+    def _setup_toolbox(self):
+        creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+        creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin)
+
+        self._toolbox.register("expr", gp.genHalfAndHalf, pset=self._pset, min_=self.min_depth, max_=self.max_depth)
+        self._toolbox.register("individual", tools.initIterate, creator.Individual, self._toolbox.expr)
+        self._toolbox.register("population", tools.initRepeat, list, self._toolbox.individual)
+        self._toolbox.register("compile", gp.compile, pset=self._pset)
+
+        self._toolbox.register("select", tools.selTournament, tournsize=self.tournament_size)
+        self._toolbox.register("mate", gp.cxOnePoint)
+        self._toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
+        self._toolbox.register("mutate", gp.mutUniform, expr=self._toolbox.expr_mut, pset=self._pset)

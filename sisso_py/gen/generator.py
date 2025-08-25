@@ -5,6 +5,7 @@ Generates the feature space by applying operators to existing features.
 from typing import List, Set, Dict
 from itertools import product, combinations_with_replacement
 import logging
+import random
 
 from ..dsl.expr import Expr, Var, Unary, Binary
 from ..dsl.complexity import ComplexityBudget
@@ -113,3 +114,32 @@ class FeatureGenerator:
             feature_space.append(new_features_layer)
 
         return feature_space
+    
+    def generate_random_expr(self, initial_features: List[Expr], max_depth: int) -> Expr:
+        """
+        Generate a random expression for GA-PSO algorithm.
+        
+        Args:
+            initial_features (List[Expr]): The base features to choose from.
+            max_depth (int): Maximum depth of the expression tree.
+            
+        Returns:
+            Expr: A randomly generated expression.
+        """
+        import random
+        
+        if max_depth <= 1 or random.random() < 0.3:  # 30% chance for terminal
+            return random.choice(initial_features)
+        
+        # Choose operator type
+        if self.binary_ops and (not self.unary_ops or random.random() < 0.7):
+            # Binary operator
+            op = random.choice(self.binary_ops)
+            left = self.generate_random_expr(initial_features, max_depth - 1)
+            right = self.generate_random_expr(initial_features, max_depth - 1)
+            return Binary(op.name, left, right)  # Use op.name instead of op
+        else:
+            # Unary operator
+            op = random.choice(self.unary_ops)
+            operand = self.generate_random_expr(initial_features, max_depth - 1)
+            return Unary(op.name, operand)  # Use op.name instead of op
