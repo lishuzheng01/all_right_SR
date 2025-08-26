@@ -16,6 +16,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 from ..config import RANDOM_STATE
+from ..utils.data_conversion import auto_convert_input, ensure_pandas_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -181,26 +182,22 @@ class SINDyRegressor(BaseEstimator, RegressorMixin):
         
         return all_features
     
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        """
-        拟合SINDy模型
-        
-        参数:
-        -----
-        X : pd.DataFrame
-            输入特征
-        
-        y : pd.Series
-            目标变量
-        """
+    def fit(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, pd.Series],
+        y: Union[np.ndarray, pd.Series, list],
+    ):
+        """拟合SINDy模型"""
         logger.info("开始SINDy模型训练...")
-        
+
+        X, y = auto_convert_input(X, y)
+
         # 记录特征名称
         self._feature_names = X.columns.tolist()
-        
+
         # 生成扩展特征名
         self._terms = self._build_feature_names(X)
-        
+
         # 生成特征
         X_features = self._generate_features(X)
         
@@ -238,30 +235,22 @@ class SINDyRegressor(BaseEstimator, RegressorMixin):
         self._train_y = y
         return self
     
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        使用拟合好的模型进行预测
-        
-        参数:
-        -----
-        X : pd.DataFrame
-            输入特征
-            
-        返回:
-        -----
-        np.ndarray
-            预测值
-        """
+    def predict(
+        self, X: Union[np.ndarray, pd.DataFrame, pd.Series]
+    ) -> np.ndarray:
+        """使用拟合好的模型进行预测"""
         if not self._fitted:
             raise RuntimeError("模型尚未训练，请先调用fit方法")
-        
+
+        X = ensure_pandas_dataframe(X, feature_names=self._feature_names)
+
         # 生成特征
         X_features = self._generate_features(X)
-        
+
         # 标准化
         if self.normalize:
             X_features = self._scaler.transform(X_features)
-        
+
         # 预测
         return self._model.predict(X_features)
     
