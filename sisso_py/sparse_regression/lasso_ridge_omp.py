@@ -12,7 +12,7 @@ from sklearn.linear_model import Lasso, Ridge, OrthogonalMatchingPursuit
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 from ..config import RANDOM_STATE
 from ..utils.data_conversion import auto_convert_input, validate_input_shapes
@@ -197,6 +197,8 @@ class LassoRegressor(BaseSparseSolver):
         # 验证输入形状并转换为pandas格式
         validate_input_shapes(X, y)
         X, y = auto_convert_input(X, y, feature_names)
+        self._train_X = X
+        self._train_y = y
         
         # 保存特征名
         self.feature_names_ = X.columns.tolist()
@@ -271,7 +273,7 @@ class LassoRegressor(BaseSparseSolver):
         logger.info(f"Lasso回归模型训练完成，MSE: {mse:.6f}, R2: {r2:.6f}")
         logger.info(f"非零系数数量: {n_nonzero}/{len(self.model_.coef_)}")
         logger.info(f"公式: {self.formula_}")
-        
+
         return self
     
     def predict(self, X: Union[np.ndarray, pd.DataFrame], 
@@ -377,34 +379,60 @@ class LassoRegressor(BaseSparseSolver):
             "intercept": self.model_.intercept_
         }
     
-    def explain(self) -> Dict:
-        """
-        返回可解释的模型信息
-        
-        返回:
-        -----
-        Dict
-            包含模型解释的字典
-        """
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
         if self.model_ is None:
-            return {"status": "模型尚未训练"}
-        
-        model_info = self.get_model_info()
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
         feature_names = self._build_feature_names(pd.DataFrame(columns=self.feature_names_))
-        
-        # 获取所有非零项
-        nonzero_terms = {}
-        for name, coef in zip(feature_names, self.model_.coef_):
-            if abs(coef) > 1e-10:
-                nonzero_terms[name] = coef
-        
-        return {
-            **model_info,
-            "formula": self.formula_,
-            "nonzero_terms_details": nonzero_terms,
-            "method": "Lasso回归",
-            "orig_features": self.feature_names_
+        nonzero_terms = {
+            name: coef for name, coef in zip(feature_names, self.model_.coef_)
+            if abs(coef) > 1e-10
         }
+
+        report = {
+            "configuration": {
+                "alpha": self.alpha_,
+                "poly_degree": self.poly_degree
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self.formula_,
+                    "formula_sympy": self.formula_,
+                    "intercept": self.model_.intercept_,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": int(np.sum(self.model_.coef_ != 0))
+            }
+        }
+
+        return SissoReport(report)
 
 class RidgeRegressor(BaseSparseSolver):
     """
@@ -556,7 +584,10 @@ class RidgeRegressor(BaseSparseSolver):
         logger.info(f"Ridge回归模型训练完成，MSE: {mse:.6f}, R2: {r2:.6f}")
         logger.info(f"近似零系数数量: {small_coef}/{len(self.model_.coef_)}")
         logger.info(f"公式: {self.formula_}")
-        
+
+        self._train_X = X
+        self._train_y = y
+
         return self
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -605,36 +636,58 @@ class RidgeRegressor(BaseSparseSolver):
             "intercept": self.model_.intercept_
         }
     
-    def explain(self) -> Dict:
-        """
-        返回可解释的模型信息
-        
-        返回:
-        -----
-        Dict
-            包含模型解释的字典
-        """
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
         if self.model_ is None:
-            return {"status": "模型尚未训练"}
-        
-        model_info = self.get_model_info()
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
         feature_names = self._build_feature_names(pd.DataFrame(columns=self.feature_names_))
-        
-        # 获取所有显著项
-        significant_terms = {}
-        threshold = 1e-4
-        for name, coef in zip(feature_names, self.model_.coef_):
-            if abs(coef) > threshold:
-                significant_terms[name] = coef
-        
-        return {
-            **model_info,
-            "formula": self.formula_,
-            "significant_terms_details": significant_terms,
-            "threshold": threshold,
-            "method": "Ridge回归",
-            "orig_features": self.feature_names_
+        significant_terms = {name: coef for name, coef in zip(feature_names, self.model_.coef_)
+                             if abs(coef) > 1e-4}
+
+        report = {
+            "configuration": {
+                "alpha": self.alpha_,
+                "poly_degree": self.poly_degree
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self.formula_,
+                    "formula_sympy": self.formula_,
+                    "intercept": self.model_.intercept_,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": len(significant_terms)
+            }
         }
+
+        return SissoReport(report)
 
 class OMPRegressor(BaseSparseSolver):
     """
@@ -759,7 +812,10 @@ class OMPRegressor(BaseSparseSolver):
         logger.info(f"OMP回归模型训练完成，MSE: {mse:.6f}, R2: {r2:.6f}")
         logger.info(f"非零系数数量: {n_nonzero}/{len(self.model_.coef_)}")
         logger.info(f"公式: {self.formula_}")
-        
+
+        self._train_X = X
+        self._train_y = y
+
         return self
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -804,31 +860,56 @@ class OMPRegressor(BaseSparseSolver):
             "intercept": self.model_.intercept_
         }
     
-    def explain(self) -> Dict:
-        """
-        返回可解释的模型信息
-        
-        返回:
-        -----
-        Dict
-            包含模型解释的字典
-        """
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
         if self.model_ is None:
-            return {"status": "模型尚未训练"}
-        
-        model_info = self.get_model_info()
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
         feature_names = self._build_feature_names(pd.DataFrame(columns=self.feature_names_))
-        
-        # 获取所有非零项
-        nonzero_terms = {}
-        for name, coef in zip(feature_names, self.model_.coef_):
-            if abs(coef) > 1e-10:
-                nonzero_terms[name] = coef
-        
-        return {
-            **model_info,
-            "formula": self.formula_,
-            "nonzero_terms_details": nonzero_terms,
-            "method": "正交匹配追踪(OMP)回归",
-            "orig_features": self.feature_names_
+        nonzero_terms = {name: coef for name, coef in zip(feature_names, self.model_.coef_)
+                         if abs(coef) > 1e-10}
+
+        report = {
+            "configuration": {
+                "n_nonzero_coefs": self.n_nonzero_coefs,
+                "tol": self.tol,
+                "poly_degree": self.poly_degree
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self.formula_,
+                    "formula_sympy": self.formula_,
+                    "intercept": self.model_.intercept_,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": int(np.sum(self.model_.coef_ != 0))
+            }
         }
+
+        return SissoReport(report)

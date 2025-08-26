@@ -46,14 +46,17 @@ def build_report(model) -> SissoReport:
     if hasattr(model, '_train_X') and hasattr(model, '_train_y'):
         try:
             y_train_pred = model.predict(model._train_X)
+            mse = mean_squared_error(model._train_y, y_train_pred)
             train_metrics = {
-                "train_rmse": np.sqrt(mean_squared_error(model._train_y, y_train_pred)),
+                "train_mse": mse,
+                "train_rmse": np.sqrt(mse),
                 "train_mae": mean_absolute_error(model._train_y, y_train_pred),
                 "train_r2": r2_score(model._train_y, y_train_pred),
                 "train_samples": len(model._train_y)
             }
         except Exception as e:
             train_metrics = {
+                "train_mse": None,
                 "train_rmse": None,
                 "train_mae": None,
                 "train_r2": None,
@@ -61,6 +64,7 @@ def build_report(model) -> SissoReport:
             }
     else:
         train_metrics = {
+            "train_mse": None,
             "train_rmse": None,
             "train_mae": None,
             "train_r2": None,
