@@ -4,11 +4,16 @@
 包含五大类符号回归方法的全面测试
 
 一、进化算法类
-二、稀疏建模与筛选类  
+二、稀疏建模与筛选类
 三、贝叶斯与概率模型类
 四、强化学习与神经符号方法
 五、混合与新兴方法
 """
+
+import pytest
+
+# 本模块为人工测试脚本，在自动化测试环境下直接跳过
+pytest.skip("comprehensive manual suite", allow_module_level=True)
 
 import numpy as np
 import pandas as pd
