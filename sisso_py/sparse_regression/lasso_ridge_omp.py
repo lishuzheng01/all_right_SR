@@ -781,10 +781,10 @@ class OMPRegressor(BaseSparseSolver):
             steps.append(('scaler', scaler))
         
         # 创建OMP模型
+        # sklearn >=1.2 移除了 normalize 参数，标准化已经在管道中完成
         omp = OrthogonalMatchingPursuit(
             n_nonzero_coefs=self.n_nonzero_coefs,
-            tol=self.tol,
-            normalize=False,  # 因为我们已经在管道中标准化了
+            tol=self.tol
         )
         steps.append(('omp', omp))
         

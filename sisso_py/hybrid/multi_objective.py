@@ -133,14 +133,18 @@ class MultiObjectiveSymbolicRegression(BaseEstimator, RegressorMixin):
         template = np.random.choice(templates)
         
         # 随机选择变量
-        selected_vars = np.random.choice(
-            self.feature_names_, 
-            size=min(3, len(self.feature_names_)), 
+        selected_vars = list(np.random.choice(
+            self.feature_names_,
+            size=min(3, len(self.feature_names_)),
             replace=True
-        )
-        
+        ))
+
+        # 一些模板需要 var2/var3，当特征数量不足时重复使用已有变量
+        while len(selected_vars) < 3:
+            selected_vars.append(selected_vars[0])
+
         var_mapping = {f'var{i+1}': var for i, var in enumerate(selected_vars)}
-        
+
         return template.format(**var_mapping)
     
     def _evaluate_population(self, population, X, y):
