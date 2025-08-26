@@ -15,8 +15,8 @@
 
 import numpy as np
 import pandas as pd
-from sisso_py.hybrid.physics_informed import PhysicsInformedSymbolicRegression
-from sisso_py.dsl.dimension import Dimension
+from SR_py.hybrid.physics_informed import PhysicsInformedSymbolicRegression
+from SR_py.dsl.dimension import Dimension
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

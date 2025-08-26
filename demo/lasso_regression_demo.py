@@ -16,7 +16,7 @@ LASSO (Least Absolute Shrinkage and Selection Operator) 通过L1正则化
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sisso_py.sparse_regression.lasso_ridge_omp import LassoRegressor
+from SR_py.sparse_regression.lasso_ridge_omp import LassoRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

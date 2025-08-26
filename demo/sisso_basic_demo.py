@@ -16,7 +16,7 @@ SISSO是一种基于特征构造和稀疏回归的符号回归方法，
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sisso_py.sparse_regression.sisso import SISSORegressor
+from SR_py.sparse_regression.sisso import SISSORegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

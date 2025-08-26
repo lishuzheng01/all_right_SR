@@ -15,7 +15,7 @@
 
 import numpy as np
 import pandas as pd
-from sisso_py.hybrid.multi_objective import MultiObjectiveSymbolicRegression
+from SR_py.hybrid.multi_objective import MultiObjectiveSymbolicRegression
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

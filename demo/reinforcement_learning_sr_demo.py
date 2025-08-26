@@ -15,7 +15,7 @@
 
 import numpy as np
 import pandas as pd
-from sisso_py.neural_symbolic.rl_sr import ReinforcementSymbolicRegression
+from SR_py.neural_symbolic.rl_sr import ReinforcementSymbolicRegression
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

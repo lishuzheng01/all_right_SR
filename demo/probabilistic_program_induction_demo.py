@@ -15,7 +15,7 @@
 
 import numpy as np
 import pandas as pd
-from sisso_py.probabilistic.ppi import ProbabilisticProgramInduction
+from SR_py.probabilistic.ppi import ProbabilisticProgramInduction
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

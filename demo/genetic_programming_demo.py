@@ -16,7 +16,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sisso_py.evolutionary.gp import GeneticProgramming
+from SR_py.evolutionary.gp import GeneticProgramming
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

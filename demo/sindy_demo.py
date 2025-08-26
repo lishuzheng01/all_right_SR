@@ -15,7 +15,7 @@ SINDy专门用于发现动力学系统的控制方程，
 
 import numpy as np
 import pandas as pd
-from sisso_py.sparse_regression.sindy import SINDyRegressor
+from SR_py.sparse_regression.sindy import SINDyRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')

@@ -16,7 +16,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sisso_py.probabilistic.bsr import BayesianSymbolicRegressor
+from SR_py.probabilistic.bsr import BayesianSymbolicRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')
