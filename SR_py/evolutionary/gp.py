@@ -23,6 +23,7 @@ from ..ops.abs_sign import Abs
 from ..dsl.dimension import Dimension
 from ..utils.logging import setup_logging
 from ..config import RANDOM_STATE
+from ..utils.data_conversion import auto_convert_input, ensure_numpy_array
 
 logger = setup_logging()
 
@@ -71,14 +72,19 @@ class GeneticProgramming:
         if self.n_jobs != 1:
             self._toolbox.register("map", parallelize, n_jobs=self.n_jobs)
 
-    def fit(self, X, y, feature_names):
+    def fit(self, X, y, feature_names: Optional[List[str]] = None):
         if self.random_state is not None:
             np.random.seed(self.random_state)
             random.seed(self.random_state)
 
+        X_df, y_series = auto_convert_input(X, y, feature_names)
+        feature_names = feature_names or X_df.columns.tolist()
+
         self._setup_primitives(feature_names)
         self._setup_toolbox()
-        self._toolbox.register("evaluate", self._evaluate_individual, X=X, y=y)
+        X_array = X_df.values
+        y_array = y_series.values
+        self._toolbox.register("evaluate", self._evaluate_individual, X=X_array, y=y_array)
 
         pop = self._toolbox.population(n=self.population_size)
         hof = tools.HallOfFame(1)
@@ -95,8 +101,8 @@ class GeneticProgramming:
         self._log = log
 
         # 保存训练数据以便后续生成报告
-        self._train_X = X
-        self._train_y = y
+        self._train_X = X_df
+        self._train_y = y_series
 
         logger.info(f"Training finished. Best fitness: {self._best_individual.fitness.values[0]}")
         return self
@@ -132,14 +138,11 @@ class GeneticProgramming:
         if self._best_individual is None:
             raise RuntimeError("The model has not been trained yet. Call fit() first.")
         func = self._toolbox.compile(expr=self._best_individual)
-        
-        # 转换X为数组形式
-        if isinstance(X, pd.DataFrame):
-            X_array = X.values
-        else:
-            X_array = X
-        
-        # 对每个样本计算函数值
+
+        X_array = ensure_numpy_array(X)
+        if X_array.ndim == 1:
+            X_array = X_array.reshape(1, -1)
+
         y_pred = []
         for i in range(X_array.shape[0]):
             try:
@@ -147,7 +150,7 @@ class GeneticProgramming:
                 y_pred.append(pred)
             except:
                 y_pred.append(0.0)  # 默认值
-        
+
         return np.array(y_pred)
 
     def get_best_model_string(self):
