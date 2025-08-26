@@ -43,7 +43,7 @@ class SissoReport:
         """格式化完整报告"""
         lines = []
         lines.append("=" * 80)
-        lines.append("📊 SISSO 符号回归分析报告")
+        lines.append("📊符号回归分析报告")
         lines.append("=" * 80)
         
         # 配置信息
@@ -73,8 +73,8 @@ class SissoReport:
         lines.append("\n🔧 模型配置")
         lines.append("-" * 50)
         lines.append(f"  复杂度层数 (K): {config.get('K', 'N/A')}")
-        lines.append(f"  SIS筛选方法: {config.get('sis_screener', 'N/A')}")
-        lines.append(f"  SIS保留特征: {config.get('sis_topk', 'N/A')}")
+        lines.append(f"  筛选方法: {config.get('sis_screener', 'N/A')}")
+        lines.append(f"  保留特征: {config.get('sis_topk', 'N/A')}")
         lines.append(f"  稀疏求解器: {config.get('so_solver', 'N/A')}")
         lines.append(f"  最大模型项数: {config.get('so_max_terms', 'N/A')}")
         

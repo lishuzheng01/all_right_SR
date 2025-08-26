@@ -1,0 +1,2 @@
+[console_scripts]
+sisso-py = SR_py.cli:main

@@ -3,9 +3,9 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sisso-py"
+name = "all_right_SR"
 authors = [
-    {name = "SISSO-Py Team", email = "3035326878@qq.com"},
+    {name = "lishuzheng", email = "3035326878@qq.com"},
 ]
 description = "Python implementation of Sure Independence Screening and Sparsifying Operator (SISSO)"
 readme = "README.md"
@@ -57,7 +57,7 @@ docs = [
 ]
 
 [project.scripts]
-sisso-py = "sisso_py.cli:main"
+all_right_SR = "SR_py.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/your-username/sisso-py"
@@ -65,10 +65,10 @@ Repository = "https://github.com/your-username/sisso-py.git"
 Issues = "https://github.com/your-username/sisso-py/issues"
 
 [tool.setuptools.packages.find]
-include = ["sisso_py*"]
+include = ["SR_py*"]
 
 [tool.setuptools.dynamic]
-version = {attr = "sisso_py.__version__"}
+version = {attr = "SR_py.__version__"}
 
 [tool.black]
 line-length = 88
@@ -92,7 +92,7 @@ extend-exclude = '''
 profile = "black"
 multi_line_output = 3
 line_length = 88
-known_first_party = ["sisso_py"]
+known_first_party = ["SR_py"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

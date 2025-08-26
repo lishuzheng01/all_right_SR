@@ -22,9 +22,9 @@ def get_long_description():
     return ""
 
 setup(
-    name="sisso-py",
+    name="all_right_SR",
     version=get_version(),
-    author="SISSO-Py Team",
+    author="lishuzheng",
     author_email="3035326878@qq.com",
     description="Python implementation of Sure Independence Screening and Sparsifying Operator (SISSO)",
     long_description=get_long_description(),
@@ -76,7 +76,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "sisso-py=sisso_py.cli:main",
+            "sisso-py=SR_py.cli:main",
         ],
     },
     include_package_data=True,
