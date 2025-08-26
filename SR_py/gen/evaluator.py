@@ -27,7 +27,8 @@ class FeatureEvaluator:
 
     def evaluate(self,
                  features: List[Expr],
-                 data: pd.DataFrame) -> (pd.DataFrame, List[Expr]):
+                 data: pd.DataFrame,
+                 skip_constant: bool = True) -> (pd.DataFrame, List[Expr]):
         """
         Evaluate all features and return a DataFrame of numerical values.
 
@@ -64,7 +65,7 @@ class FeatureEvaluator:
                 vec = np.clip(vec, self.clip_min, self.clip_max)
                 
                 # 3. Check for constant features (zero variance)
-                if np.std(vec) < 1e-8:
+                if skip_constant and np.std(vec) < 1e-8:
                     logger.debug(f"Skipping feature '{sig}' because it is constant.")
                     continue
                 

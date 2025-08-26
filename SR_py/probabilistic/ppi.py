@@ -122,12 +122,19 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
         
     elite_fraction : float, 默认=0.1
         精英比例
-        
+
     parsimony_coefficient : float, 默认=0.02
         简洁性系数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.probabilistic.ppi import ProbabilisticProgramInduction
+    >>> model = ProbabilisticProgramInduction()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  n_iterations: int = 1000,
@@ -532,7 +539,7 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
             "high_prob_rules": high_prob_rules,
         }
     
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if not self._fitted:
@@ -559,6 +566,7 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "PPI 回归分析报告",
             "configuration": {
                 "population_size": self.population_size,
                 "n_iterations": self.n_iterations
@@ -580,3 +588,7 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

@@ -13,11 +13,50 @@ import logging
 logger = logging.getLogger(__name__)
 
 class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
-    """
-    神经网络与符号回归的混合方法
-    
-    结合神经网络的函数逼近能力和符号回归的可解释性，
-    使用注意力机制融合两个组件的输出。
+    """Hybrid neural network and symbolic regression model.
+
+    A neural component learns flexible representations while a symbolic
+    component searches interpretable expressions. Their outputs are merged via
+    a configurable fusion strategy such as attention or weighted averaging.
+
+    Parameters
+    ----------
+    neural_component : str, default='transformer'
+        Type of neural architecture used (e.g., ``'transformer'`` or
+        ``'mlp'``).
+    symbolic_component : str, default='gp'
+        Symbolic regression backend, e.g., genetic programming.
+    fusion_method : str, default='attention'
+        How to combine neural and symbolic predictions: ``'attention'`` or
+        ``'weighted'``.
+    epochs : int, default=30
+        Training epochs for the neural component.
+    hidden_dim : int, default=64
+        Size of hidden representations inside the neural network.
+    n_heads : int, default=4
+        Number of attention heads when using a transformer encoder.
+    n_layers : int, default=2
+        Number of neural network layers.
+    dropout : float, default=0.1
+        Dropout rate for regularisation.
+    alpha : float, default=0.5
+        Weight used in ``'weighted'`` fusion between neural and symbolic
+        outputs.
+    max_symbolic_depth : int, default=5
+        Maximum tree depth for the symbolic component.
+    symbolic_population : int, default=50
+        Population size for the symbolic search.
+    symbolic_generations : int, default=20
+        Number of generations for symbolic evolution.
+    random_state : int, default=42
+        Random seed for reproducibility.
+
+    Examples
+    --------
+    >>> from SR_py.neural_symbolic.hybrid_neural import NeuralSymbolicHybrid
+    >>> model = NeuralSymbolicHybrid()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     
     def __init__(self,
@@ -295,7 +334,7 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
             'symbolic_score': self.symbolic_model_['score'] if self.symbolic_model_ else None
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -322,6 +361,7 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Neural Symbolic Hybrid 分析报告",
             "configuration": {
                 "neural_component": self.neural_component,
                 "symbolic_component": self.symbolic_component,
@@ -344,3 +384,7 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

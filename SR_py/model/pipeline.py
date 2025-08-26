@@ -8,13 +8,18 @@ import logging
 from typing import List, Optional, Union, Tuple, Callable, Dict, Any
 
 from ..dsl.expr import Var, Expr
-from ..dsl.dimension import Dimension
+from ..dsl.dimension import Dimension, DIMENSIONLESS
 from ..gen.generator import FeatureGenerator
 from ..gen.evaluator import FeatureEvaluator
 from ..sis.screening import SIS
 from ..sis.so import SparsifyingOperator
 from ..config import DEFAULT_OPERATORS, RANDOM_STATE
 from .report import build_report
+from ..utils.data_conversion import (
+    auto_convert_input,
+    validate_input_shapes,
+    ensure_pandas_dataframe,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -67,21 +72,28 @@ class SissoRegressor:
         self.screener = SIS(screener=self.sis_screener, top_k=self.sis_topk)
         self.solver = SparsifyingOperator(solver=self.so_solver, max_terms=self.so_max_terms, cv=self.cv)
         
-    def fit(self, X: pd.DataFrame, y: pd.Series, 
+    def fit(self, X: Union[np.ndarray, pd.DataFrame, pd.Series],
+            y: Union[np.ndarray, pd.Series, list],
             feature_dimensions: Optional[Dict[str, Dimension]] = None,
-            target_dimension: Optional[Dimension] = None):
+            target_dimension: Optional[Dimension] = None,
+            feature_names: Optional[List[str]] = None):
         """
         Fit the SISSO model.
         """
         logger.info("Starting SISSO regressor fit process...")
+
+        # Convert input to pandas-friendly formats
+        validate_input_shapes(X, y)
+        X, y = auto_convert_input(X, y, feature_names)
+
         self._initialize_components()
-        
+
         # 1. Generate feature space
         if self.dimensional_check and feature_dimensions is None:
             raise ValueError("`feature_dimensions` must be provided when dimensional_check is True.")
-            
+
         initial_features = [
-            Var(name, dimension=feature_dimensions.get(name))
+            Var(name, dimension=feature_dimensions.get(name, DIMENSIONLESS))
             if feature_dimensions else Var(name)
             for name in X.columns
         ]
@@ -115,26 +127,33 @@ class SissoRegressor:
         logger.info("SISSO regressor fit process completed.")
         return self
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+    def predict(self, X: Union[np.ndarray, pd.DataFrame, pd.Series]) -> np.ndarray:
         """
         Predict using the fitted SISSO model.
         """
         if not self.solver or not self.final_model_info:
             raise RuntimeError("Model has not been fitted yet.")
-            
+
+        # Ensure input is DataFrame for evaluation
+        X = ensure_pandas_dataframe(X)
+
         # We need to evaluate the selected features on the new data X
         selected_feature_names = self.final_model_info.get('selected_features', [])
-        
+
         # This is inefficient, should map names back to expr objects
         selected_exprs = [expr for expr in self.feature_space_ if expr.get_signature() in selected_feature_names]
-        
-        X_eval, _ = self.evaluator.evaluate(selected_exprs, X)
-        
+
+        X_eval, _ = self.evaluator.evaluate(selected_exprs, X, skip_constant=False)
+
         return self.solver.predict(X_eval)
 
-    def explain(self) -> Dict:
+    def _build_report(self) -> Dict:
         """
         Return a dictionary with the final model, formula, and metrics.
         """
         # This is a placeholder for the final reporting logic
         return build_report(self)
+
+    @property
+    def explain(self) -> Dict:
+        return self._build_report()

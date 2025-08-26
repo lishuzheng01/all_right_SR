@@ -71,9 +71,16 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
         
     n_jobs : int, 默认=1
         并行化的作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.evolutionary.ga_pso import GAPSORegressor
+    >>> model = GAPSORegressor(generations=30)
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  population_size: int = 200,
@@ -422,7 +429,7 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
             "expression_complexity": self._global_best_individual.expression.get_complexity(),
         }
     
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if not self._fitted:
@@ -449,6 +456,7 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "GA-PSO 回归分析报告",
             "configuration": {
                 "population_size": self.population_size,
                 "generations": self.generations,
@@ -471,3 +479,7 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

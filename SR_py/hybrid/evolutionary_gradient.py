@@ -13,11 +13,44 @@ import logging
 logger = logging.getLogger(__name__)
 
 class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
-    """
-    结合进化搜索和梯度优化的混合符号回归方法
-    
-    第一阶段使用进化算法进行全局搜索，找到有前途的符号结构；
-    第二阶段使用梯度优化微调表达式中的数值参数。
+    """Hybrid evolutionary and gradient-based symbolic regression.
+
+    The algorithm first performs a global evolutionary search to identify
+    promising expression structures and then refines numeric constants using
+    gradient descent.
+
+    Parameters
+    ----------
+    evolution_phase_generations : int, default=20
+        Number of generations in the evolutionary search phase.
+    gradient_phase_iterations : int, default=100
+        Iterations of gradient optimisation for each candidate.
+    population_size : int, default=30
+        Number of individuals maintained during evolution.
+    learning_rate : float, default=0.01
+        Step size used in the gradient refinement phase.
+    momentum : float, default=0.9
+        Momentum term for gradient updates.
+    tolerance : float, default=1e-6
+        Convergence threshold for gradient optimisation.
+    max_expression_depth : int, default=6
+        Maximum depth of generated expression trees.
+    mutation_rate : float, default=0.1
+        Probability of mutating an individual during evolution.
+    crossover_rate : float, default=0.8
+        Probability of performing crossover between individuals.
+    elitism_rate : float, default=0.1
+        Fraction of top individuals carried over unchanged to the next
+        generation.
+    random_state : int, default=42
+        Seed for reproducibility.
+
+    Examples
+    --------
+    >>> from SR_py.hybrid.evolutionary_gradient import EvolutionaryGradientHybrid
+    >>> model = EvolutionaryGradientHybrid()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     
     def __init__(self,
@@ -344,7 +377,7 @@ class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
             'gradient_iterations': len(self.gradient_history_)
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -371,6 +404,7 @@ class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Evolutionary Gradient Hybrid 分析报告",
             "configuration": {
                 "population_size": self.population_size,
                 "evolution_generations": self.evolution_phase_generations,
@@ -393,3 +427,7 @@ class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

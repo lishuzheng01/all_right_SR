@@ -37,8 +37,42 @@ def parallelize(func, iterable, n_jobs=-1):
 
 
 class GeneticProgramming:
-    """
-    A Genetic Programming model for symbolic regression.
+    """Genetic Programming model for symbolic regression.
+
+    This estimator evolves expression trees to fit data using crossover and
+    mutation operations. Key aspects of the search, such as population size or
+    operator set, can be configured through the constructor.
+
+    Parameters
+    ----------
+    population_size : int, default=100
+        Number of individuals maintained in each generation.
+    n_generations : int, default=20
+        Number of evolutionary iterations used during training.
+    crossover_rate : float, default=0.8
+        Probability of performing subtree crossover between two individuals.
+    mutation_rate : float, default=0.2
+        Probability of mutating a node inside an individual.
+    tournament_size : int, default=3
+        Number of individuals competing during tournament selection.
+    min_depth : int, default=2
+        Minimum depth for trees produced during initialization.
+    max_depth : int, default=5
+        Maximum depth allowed for generated expression trees.
+    operators : list[Operator], optional
+        Primitive operators available to construct expressions. ``None`` uses a
+        default mix of arithmetic and transcendental operators.
+    n_jobs : int, default=-1
+        Number of parallel jobs. ``-1`` uses all available CPU cores.
+    random_state : int, default=RANDOM_STATE
+        Seed used to make the evolutionary process deterministic.
+
+    Examples
+    --------
+    >>> from SR_py.evolutionary.gp import GeneticProgramming
+    >>> model = GeneticProgramming(population_size=50, n_generations=10)
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  population_size: int = 100,
@@ -158,7 +192,7 @@ class GeneticProgramming:
             return "No model trained yet."
         return str(self._best_individual)
 
-    def explain(self) -> Report:
+    def _build_report(self) -> Report:
         """生成包含评价指标的格式化报告"""
         if self._best_individual is None:
             return Report({"status": "Model not fitted."})
@@ -184,6 +218,7 @@ class GeneticProgramming:
             }
 
         report_data = {
+            "title": "Genetic Programming 回归分析报告",
             "configuration": {
                 "population_size": self.population_size,
                 "n_generations": self.n_generations,
@@ -207,6 +242,10 @@ class GeneticProgramming:
         }
 
         return Report(report_data)
+
+    @property
+    def explain(self) -> Report:
+        return self._build_report()
 
     def _setup_primitives(self, feature_names):
         self._feature_names = feature_names

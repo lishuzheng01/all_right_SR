@@ -56,9 +56,16 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
         
     n_jobs : int, 默认=-1
         并行计算的作业数，-1表示使用所有处理器
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.sisso import SISSORegressor
+    >>> model = SISSORegressor(K=2)
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  K: int = 3,
@@ -249,16 +256,20 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
         # 预测
         return self.solver.predict(X_eval)
 
-    def explain(self) -> Dict:
+    def _build_report(self) -> Dict:
         """
         返回最终模型的解释信息
-        
+
         返回:
         -----
         Dict
             包含模型信息的字典
         """
         return build_report(self)
+
+    @property
+    def explain(self) -> Dict:
+        return self._build_report()
 
     def get_model_info(self) -> Dict:
         """

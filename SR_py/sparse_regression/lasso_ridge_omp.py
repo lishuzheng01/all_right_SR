@@ -146,9 +146,16 @@ class LassoRegressor(BaseSparseSolver):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.lasso_ridge_omp import LassoRegressor
+    >>> model = LassoRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  alpha: float = 0.1,
@@ -379,7 +386,7 @@ class LassoRegressor(BaseSparseSolver):
             "intercept": self.model_.intercept_
         }
     
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.model_ is None:
@@ -412,6 +419,7 @@ class LassoRegressor(BaseSparseSolver):
         }
 
         report = {
+            "title": "Lasso 回归分析报告",
             "configuration": {
                 "alpha": self.alpha_,
                 "poly_degree": self.poly_degree
@@ -433,6 +441,10 @@ class LassoRegressor(BaseSparseSolver):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()
 
 class RidgeRegressor(BaseSparseSolver):
     """
@@ -468,9 +480,16 @@ class RidgeRegressor(BaseSparseSolver):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.lasso_ridge_omp import RidgeRegressor
+    >>> model = RidgeRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  alpha: float = 1.0,
@@ -636,7 +655,7 @@ class RidgeRegressor(BaseSparseSolver):
             "intercept": self.model_.intercept_
         }
     
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.model_ is None:
@@ -667,6 +686,7 @@ class RidgeRegressor(BaseSparseSolver):
                              if abs(coef) > 1e-4}
 
         report = {
+            "title": "Ridge 回归分析报告",
             "configuration": {
                 "alpha": self.alpha_,
                 "poly_degree": self.poly_degree
@@ -688,6 +708,10 @@ class RidgeRegressor(BaseSparseSolver):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()
 
 class OMPRegressor(BaseSparseSolver):
     """
@@ -717,9 +741,16 @@ class OMPRegressor(BaseSparseSolver):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.lasso_ridge_omp import OMPRegressor
+    >>> model = OMPRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  n_nonzero_coefs: Optional[int] = None,
@@ -860,7 +891,7 @@ class OMPRegressor(BaseSparseSolver):
             "intercept": self.model_.intercept_
         }
     
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.model_ is None:
@@ -891,6 +922,7 @@ class OMPRegressor(BaseSparseSolver):
                          if abs(coef) > 1e-10}
 
         report = {
+            "title": "OMP 回归分析报告",
             "configuration": {
                 "n_nonzero_coefs": self.n_nonzero_coefs,
                 "tol": self.tol,
@@ -913,3 +945,7 @@ class OMPRegressor(BaseSparseSolver):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()
