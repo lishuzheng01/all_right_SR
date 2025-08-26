@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,6 +76,8 @@ class PhysicsInformedSymbolicRegression(BaseEstimator, RegressorMixin):
         self._symbolic_regression_with_constraints(selected_features, X, y)
         
         logger.info(f"训练完成，最佳表达式: {self.best_expression_}")
+        self._train_X = X
+        self._train_y = y
         return self
     
     def predict(self, X):
@@ -401,3 +403,53 @@ class PhysicsInformedSymbolicRegression(BaseEstimator, RegressorMixin):
             'dimensional_violations': len(self.dimensional_violations_),
             'constraint_violations': len(self.constraint_violations_)
         }
+
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
+        if self.best_expression_ is None:
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
+        report = {
+            "configuration": {
+                "K": self.K,
+                "physical_constraints": self.physical_constraints,
+                "dimensional_analysis": self.dimensional_analysis
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self.best_expression_,
+                    "formula_sympy": self.best_expression_,
+                    "intercept": 0,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": 1
+            }
+        }
+
+        return SissoReport(report)

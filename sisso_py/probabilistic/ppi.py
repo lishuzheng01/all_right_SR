@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple, Callable, Union, Optional, Any
 import logging
 import random
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 import time
 
@@ -493,7 +493,9 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
         
         logger.info(f"概率程序归纳训练完成，MSE: {mse:.6f}, R²: {r2:.6f}")
         logger.info(f"最终表达式: {self._best_expr}")
-        
+        self._train_X = X
+        self._train_y = y
+
         return self
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -541,23 +543,51 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
             "high_prob_rules": high_prob_rules,
         }
     
-    def explain(self) -> Dict:
-        """
-        返回可解释的模型信息
-        
-        返回:
-        -----
-        Dict
-            包含模型解释的字典
-        """
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
         if not self._fitted:
-            return {"status": "模型尚未训练"}
-        
-        model_info = self.get_model_info()
-        
-        return {
-            **model_info,
-            "expression": str(self._best_expr),
-            "variables": self._feature_names,
-            "method": "概率程序归纳"
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
+        report = {
+            "configuration": {
+                "population_size": self.population_size,
+                "n_iterations": self.n_iterations
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": str(self._best_expr),
+                    "formula_sympy": str(self._best_expr),
+                    "intercept": 0,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": 1
+            }
         }
+
+        return SissoReport(report)

@@ -7,6 +7,14 @@ AllRight-SR 集成了多种符号回归算法，包括进化算法、稀疏建�
 以下示例默认已准备好训练数据 `X` 和目标 `y`。库现已支持 **NumPy** 数组与 **pandas** DataFrame/Series，
 并会在内部自动转换，因此可以在训练和预测时自由混合使用。
 
+所有算法在训练完成后均支持使用 `model.explain()` 生成包含 R²、MSE 等评价指标的整洁报告：
+
+```python
+# 输出模型报告
+report = model.explain()
+print(report)
+```
+
 ### 多种输入格式示例
 ```python
 import numpy as np

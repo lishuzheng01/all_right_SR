@@ -110,11 +110,11 @@ class SissoReport:
         if formula_latex:
             readable_formula = self._make_formula_readable(formula_latex)
             lines.append(f"  数学表达式:")
-            lines.append(f"    {readable_formula}")
-            
+            lines.append(f"    y = {readable_formula}")
+
         # 显示LaTeX代码（可选）
         lines.append(f"\n  LaTeX代码:")
-        lines.append(f"    {formula_latex}")
+        lines.append(f"    y = {formula_latex}")
         
         return "\n".join(lines)
     
@@ -157,6 +157,7 @@ class SissoReport:
         
         # 检查是否有训练集指标
         train_rmse = metrics.get("train_rmse")
+        train_mse = metrics.get("train_mse")
         train_mae = metrics.get("train_mae")
         train_r2 = metrics.get("train_r2")
         train_samples = metrics.get("train_samples")
@@ -169,6 +170,8 @@ class SissoReport:
             lines.append(f"  ℹ️  {note_msg}")
         elif train_rmse is not None:
             lines.append(f"  📈 训练集性能 (基于 {train_samples} 个样本):")
+            if train_mse is not None:
+                lines.append(f"    MSE  (均方误差):     {train_mse:.6f}")
             lines.append(f"    RMSE (均方根误差): {train_rmse:.6f}")
             if train_mae is not None:
                 lines.append(f"    MAE  (平均绝对误差): {train_mae:.6f}")

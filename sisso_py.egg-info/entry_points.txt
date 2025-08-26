@@ -1,2 +1,0 @@
-[console_scripts]
-sisso-py = sisso_py.cli:main

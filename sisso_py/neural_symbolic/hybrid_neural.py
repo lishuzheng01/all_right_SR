@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import logging
 
 logger = logging.getLogger(__name__)
@@ -79,6 +79,8 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
         self._learn_fusion_weights(X, y)
         
         logger.info("神经符号混合模型训练完成")
+        self._train_X = X
+        self._train_y = y
         return self
     
     def predict(self, X):
@@ -292,3 +294,53 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
             'fusion_alpha': self.alpha,
             'symbolic_score': self.symbolic_model_['score'] if self.symbolic_model_ else None
         }
+
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
+        if self.best_expression_ is None:
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
+        report = {
+            "configuration": {
+                "neural_component": self.neural_component,
+                "symbolic_component": self.symbolic_component,
+                "fusion_method": self.fusion_method
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self.best_expression_,
+                    "formula_sympy": self.best_expression_,
+                    "intercept": 0,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": 1
+            }
+        }
+
+        return SissoReport(report)
