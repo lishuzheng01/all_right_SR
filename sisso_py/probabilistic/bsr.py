@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple, Callable, Union, Optional, Any
 import logging
 import random
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 import time
 
@@ -407,18 +407,22 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
         best_idx = np.argmax([r['best_log_lik'] for r in results])
         self._best_expr = results[best_idx]['best_expr']
         self._best_score = results[best_idx]['best_log_lik']
-        
+
         # 设置训练状态
         self._fitted = True
-        
+
+        # 保存训练数据
+        self._train_X = X
+        self._train_y = y
+
         # 计算模型性能
         y_pred = self.predict(X)
         mse = mean_squared_error(y, y_pred)
         r2 = r2_score(y, y_pred)
-        
+
         logger.info(f"贝叶斯符号回归训练完成，MSE: {mse:.6f}, R²: {r2:.6f}")
         logger.info(f"最佳表达式: {self._best_expr.to_string()}")
-        
+
         return self
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -461,27 +465,51 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
             "chain_history": self._chain_history
         }
     
-    def explain(self) -> Dict:
-        """
-        返回可解释的模型信息
-        
-        返回:
-        -----
-        Dict
-            包含模型解释的字典
-        """
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
         if not self._fitted:
-            return {"status": "模型尚未训练"}
-        
-        model_info = self.get_model_info()
-        
-        # 提取每个链的最佳表达式
-        chain_exprs = [info["best_expr"] for info in self._chain_history]
-        
-        return {
-            **model_info,
-            "expression": self._best_expr.to_string(),
-            "variables": self._feature_names,
-            "chain_expressions": chain_exprs,
-            "method": "贝叶斯符号回归 (MCMC)"
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
+        report = {
+            "configuration": {
+                "n_iter": self.n_iter,
+                "n_chains": self.n_chains
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self._best_expr.to_string(),
+                    "formula_sympy": self._best_expr.to_string(),
+                    "intercept": 0,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": 1
+            }
         }
+
+        return SissoReport(report)

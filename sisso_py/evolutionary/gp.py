@@ -13,6 +13,7 @@ from deap import base, creator, tools, gp, algorithms
 
 from ..utils.parallel import get_parallel_backend
 from ..metrics.regression import r2_score, mean_squared_error
+from sklearn.metrics import mean_absolute_error
 from ..model.formatted_report import SissoReport as Report
 from ..ops.base import Operator
 from ..ops.algebra import Add, Sub, Mul, SafeDiv
@@ -92,6 +93,11 @@ class GeneticProgramming:
 
         self._best_individual = hof[0]
         self._log = log
+
+        # 保存训练数据以便后续生成报告
+        self._train_X = X
+        self._train_y = y
+
         logger.info(f"Training finished. Best fitness: {self._best_individual.fitness.values[0]}")
         return self
 
@@ -144,33 +150,60 @@ class GeneticProgramming:
         
         return np.array(y_pred)
 
-    def get_best_model_report(self, X, y):
-        if self._best_individual is None:
-            return Report({"status": "Model not fitted."})
-        
-        y_pred = self.predict(X)
-        r2 = r2_score(y, y_pred)
-        mse = mean_squared_error(y, y_pred)
-        
-        report_data = {
-            "results": {
-                "final_model": {
-                    "formula_str": str(self._best_individual),
-                    "tree_depth": self._best_individual.height,
-                    "tree_size": len(self._best_individual),
-                },
-                "metrics": {
-                    "r2": r2,
-                    "mse": mse,
-                }
-            }
-        }
-        return Report(report_data)
-
     def get_best_model_string(self):
         if self._best_individual is None:
             return "No model trained yet."
         return str(self._best_individual)
+
+    def explain(self) -> Report:
+        """生成包含评价指标的格式化报告"""
+        if self._best_individual is None:
+            return Report({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
+        report_data = {
+            "configuration": {
+                "population_size": self.population_size,
+                "n_generations": self.n_generations,
+                "crossover_rate": self.crossover_rate,
+                "mutation_rate": self.mutation_rate,
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": str(self._best_individual),
+                    "formula_sympy": str(self._best_individual),
+                    "intercept": 0,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": 1
+            }
+        }
+
+        return Report(report_data)
 
     def _setup_primitives(self, feature_names):
         self._feature_names = feature_names

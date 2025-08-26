@@ -13,7 +13,7 @@ from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 from ..config import RANDOM_STATE
 
@@ -232,8 +232,10 @@ class SINDyRegressor(BaseEstimator, RegressorMixin):
         
         logger.info(f"SINDy模型训练完成，MSE: {mse:.6f}, R^2: {r2:.6f}")
         logger.info(f"非零系数数量: {np.sum(self._model.coef_ != 0)}/{len(self._model.coef_)}")
-        
+
         self._fitted = True
+        self._train_X = X
+        self._train_y = y
         return self
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -338,32 +340,52 @@ class SINDyRegressor(BaseEstimator, RegressorMixin):
             "threshold": self.threshold,
         }
     
-    def explain(self) -> Dict:
-        """
-        返回可解释的模型信息
-        
-        返回:
-        -----
-        Dict
-            包含模型解释的字典
-        """
+    def explain(self):
+        """生成包含评价指标的格式化报告"""
+        from ..model.formatted_report import SissoReport
         if not self._fitted:
-            return {"status": "模型尚未训练"}
-        
-        model_info = self.get_model_info()
-        
-        # 计算项的重要性
-        coefs = self._model.coef_
-        importance = np.abs(coefs)
-        importance = importance / np.sum(importance) if np.sum(importance) > 0 else importance
-        
-        # 获取最重要的项
-        top_indices = np.argsort(importance)[::-1][:5]  # 前5个最重要的项
-        top_terms = [(self._terms[i], importance[i], coefs[i]) for i in top_indices if importance[i] > 0]
-        
-        return {
-            **model_info,
-            "equation": self.get_equation(),
-            "top_terms": top_terms,
-            "feature_names": self._feature_names,
+            return SissoReport({"status": "Model not fitted."})
+
+        metrics = {}
+        try:
+            y_pred = self.predict(self._train_X)
+            mse = mean_squared_error(self._train_y, y_pred)
+            metrics = {
+                "train_mse": mse,
+                "train_rmse": float(np.sqrt(mse)),
+                "train_mae": mean_absolute_error(self._train_y, y_pred),
+                "train_r2": r2_score(self._train_y, y_pred),
+                "train_samples": len(self._train_y)
+            }
+        except Exception as e:
+            metrics = {
+                "train_mse": None,
+                "train_rmse": None,
+                "train_mae": None,
+                "train_r2": None,
+                "error": str(e)
+            }
+
+        report = {
+            "configuration": {
+                "poly_degree": self.poly_degree,
+                "solver": self.solver,
+                "threshold": self.threshold
+            },
+            "results": {
+                "final_model": {
+                    "formula_latex": self.get_equation(),
+                    "formula_sympy": self.get_equation(),
+                    "intercept": self._model.intercept_,
+                    "features": []
+                },
+                "metrics": metrics
+            },
+            "run_info": {
+                "total_features_generated": 0,
+                "features_after_sis": 0,
+                "features_in_final_model": int(np.sum(self._model.coef_ != 0))
+            }
         }
+
+        return SissoReport(report)

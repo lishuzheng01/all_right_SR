@@ -340,7 +340,7 @@ SISSO-Py计划在未来版本中加入更多筛选方法：
 - **自适应多阶段筛选流程**
 - **分布式并行筛选算法**
 
-运行 `python test/screener_methods_demo.py` 查看完整的筛选方法性能对比演示。
+运行 `python tests/screener_methods_demo.py` 查看完整的筛选方法性能对比演示。
 
 ## 附录：筛选方法技术详情
 
