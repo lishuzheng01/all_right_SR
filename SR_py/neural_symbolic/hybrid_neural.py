@@ -295,7 +295,7 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
             'symbolic_score': self.symbolic_model_['score'] if self.symbolic_model_ else None
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -322,6 +322,7 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Neural Symbolic Hybrid 分析报告",
             "configuration": {
                 "neural_component": self.neural_component,
                 "symbolic_component": self.symbolic_component,
@@ -344,3 +345,7 @@ class NeuralSymbolicHybrid(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

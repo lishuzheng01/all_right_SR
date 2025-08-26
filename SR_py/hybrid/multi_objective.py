@@ -480,7 +480,7 @@ class MultiObjectiveSymbolicRegression(BaseEstimator, RegressorMixin):
             'compromise_solution': self.best_compromise_solution_
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_compromise_solution_ is None:
@@ -507,6 +507,7 @@ class MultiObjectiveSymbolicRegression(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Multi-Objective Symbolic Regression 分析报告",
             "configuration": {
                 "objectives": self.objectives,
                 "population_size": self.population_size,
@@ -529,3 +530,7 @@ class MultiObjectiveSymbolicRegression(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

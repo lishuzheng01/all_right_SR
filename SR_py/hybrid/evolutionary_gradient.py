@@ -344,7 +344,7 @@ class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
             'gradient_iterations': len(self.gradient_history_)
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -371,6 +371,7 @@ class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Evolutionary Gradient Hybrid 分析报告",
             "configuration": {
                 "population_size": self.population_size,
                 "evolution_generations": self.evolution_phase_generations,
@@ -393,3 +394,7 @@ class EvolutionaryGradientHybrid(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

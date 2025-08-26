@@ -72,6 +72,7 @@ def build_report(model) -> SissoReport:
         }
 
     report = {
+        "title": "SISSO 回归分析报告",
         "configuration": {
             "K": model.K,
             "operators": [op for op in model.operators if isinstance(op, str)], # Simplified

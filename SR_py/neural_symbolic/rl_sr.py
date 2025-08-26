@@ -161,7 +161,7 @@ class ReinforcementSymbolicRegression(BaseEstimator, RegressorMixin):
             'episodes': len(self.training_history_)
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -188,6 +188,7 @@ class ReinforcementSymbolicRegression(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Reinforcement Symbolic Regression 分析报告",
             "configuration": {
                 "agent_type": self.agent_type,
                 "max_episodes": self.max_episodes
@@ -209,3 +210,7 @@ class ReinforcementSymbolicRegression(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

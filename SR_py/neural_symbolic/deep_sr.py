@@ -222,7 +222,7 @@ class DeepSymbolicRegression(BaseEstimator, RegressorMixin):
             'training_epochs': len(self.training_history_)
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -249,6 +249,7 @@ class DeepSymbolicRegression(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Deep Symbolic Regression 分析报告",
             "configuration": {
                 "epochs": self.epochs,
                 "encoder_layers": self.encoder_layers,
@@ -271,3 +272,7 @@ class DeepSymbolicRegression(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

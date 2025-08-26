@@ -404,7 +404,7 @@ class PhysicsInformedSymbolicRegression(BaseEstimator, RegressorMixin):
             'constraint_violations': len(self.constraint_violations_)
         }
 
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if self.best_expression_ is None:
@@ -431,6 +431,7 @@ class PhysicsInformedSymbolicRegression(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Physics-Informed Symbolic Regression 分析报告",
             "configuration": {
                 "K": self.K,
                 "physical_constraints": self.physical_constraints,
@@ -453,3 +454,7 @@ class PhysicsInformedSymbolicRegression(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

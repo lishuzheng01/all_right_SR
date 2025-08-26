@@ -249,16 +249,20 @@ class SISSORegressor(BaseEstimator, RegressorMixin):
         # 预测
         return self.solver.predict(X_eval)
 
-    def explain(self) -> Dict:
+    def _build_report(self) -> Dict:
         """
         返回最终模型的解释信息
-        
+
         返回:
         -----
         Dict
             包含模型信息的字典
         """
         return build_report(self)
+
+    @property
+    def explain(self) -> Dict:
+        return self._build_report()
 
     def get_model_info(self) -> Dict:
         """

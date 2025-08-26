@@ -158,7 +158,7 @@ class GeneticProgramming:
             return "No model trained yet."
         return str(self._best_individual)
 
-    def explain(self) -> Report:
+    def _build_report(self) -> Report:
         """生成包含评价指标的格式化报告"""
         if self._best_individual is None:
             return Report({"status": "Model not fitted."})
@@ -184,6 +184,7 @@ class GeneticProgramming:
             }
 
         report_data = {
+            "title": "Genetic Programming 回归分析报告",
             "configuration": {
                 "population_size": self.population_size,
                 "n_generations": self.n_generations,
@@ -207,6 +208,10 @@ class GeneticProgramming:
         }
 
         return Report(report_data)
+
+    @property
+    def explain(self) -> Report:
+        return self._build_report()
 
     def _setup_primitives(self, feature_names):
         self._feature_names = feature_names

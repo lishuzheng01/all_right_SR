@@ -454,7 +454,7 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
             "chain_history": self._chain_history
         }
     
-    def explain(self):
+    def _build_report(self):
         """生成包含评价指标的格式化报告"""
         from ..model.formatted_report import SissoReport
         if not self._fitted:
@@ -481,6 +481,7 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
             }
 
         report = {
+            "title": "Bayesian Symbolic Regression 分析报告",
             "configuration": {
                 "n_iter": self.n_iter,
                 "n_chains": self.n_chains
@@ -502,3 +503,7 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
         }
 
         return SissoReport(report)
+
+    @property
+    def explain(self):
+        return self._build_report()

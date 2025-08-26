@@ -27,6 +27,10 @@ class SissoReport:
     def get(self, key, default=None):
         """支持 .get() 方法"""
         return self.data.get(key, default)
+
+    def __call__(self):
+        """允许像函数一样调用以返回报告本身"""
+        return self
         
     def __str__(self) -> str:
         """返回格式化的完整报告"""
@@ -43,7 +47,8 @@ class SissoReport:
         """格式化完整报告"""
         lines = []
         lines.append("=" * 80)
-        lines.append("📊符号回归分析报告")
+        title = self.data.get("title", "符号回归分析报告")
+        lines.append(f"📊{title}")
         lines.append("=" * 80)
         
         # 配置信息
