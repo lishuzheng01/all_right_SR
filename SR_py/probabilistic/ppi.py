@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 import time
 
 from ..config import RANDOM_STATE
+from ..utils.data_conversion import auto_convert_input, ensure_pandas_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -384,24 +385,20 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
         
         return used_rules
     
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        """
-        拟合概率程序归纳模型
-        
-        参数:
-        -----
-        X : pd.DataFrame
-            输入特征
-            
-        y : pd.Series
-            目标变量
-        """
+    def fit(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, pd.Series],
+        y: Union[np.ndarray, pd.Series, list],
+    ):
+        """拟合概率程序归纳模型"""
         logger.info("开始概率程序归纳训练...")
-        
+
+        X, y = auto_convert_input(X, y)
+
         # 初始化
         random.seed(self.random_state)
         np.random.seed(self.random_state)
-        
+
         self._feature_names = list(X.columns)
         self._init_grammar()
         
@@ -498,23 +495,15 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
 
         return self
     
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        使用训练好的模型进行预测
-        
-        参数:
-        -----
-        X : pd.DataFrame
-            输入特征
-            
-        返回:
-        -----
-        np.ndarray
-            预测值
-        """
+    def predict(
+        self, X: Union[np.ndarray, pd.DataFrame, pd.Series]
+    ) -> np.ndarray:
+        """使用训练好的模型进行预测"""
         if not self._fitted or not self._best_expr:
             raise RuntimeError("模型尚未训练，请先调用fit方法")
-        
+
+        X = ensure_pandas_dataframe(X, feature_names=self._feature_names)
+
         return self._best_expr.evaluate(X)
     
     def get_model_info(self) -> Dict:
