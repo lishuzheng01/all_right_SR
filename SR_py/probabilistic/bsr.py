@@ -15,6 +15,7 @@ import time
 
 from ..dsl.expr import Var, Expr
 from ..config import RANDOM_STATE
+from ..utils.data_conversion import auto_convert_input, ensure_pandas_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -374,20 +375,16 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
             'accept_rate': accept_count / self.n_iter
         }
     
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        """
-        拟合贝叶斯符号回归模型
-        
-        参数:
-        -----
-        X : pd.DataFrame
-            输入特征
-            
-        y : pd.Series
-            目标变量
-        """
+    def fit(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, pd.Series],
+        y: Union[np.ndarray, pd.Series, list],
+    ):
+        """拟合贝叶斯符号回归模型"""
         logger.info("开始贝叶斯符号回归训练...")
-        
+
+        X, y = auto_convert_input(X, y)
+
         self._feature_names = list(X.columns)
         self._chain_history = []
         
@@ -425,23 +422,15 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
 
         return self
     
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        使用训练好的模型进行预测
-        
-        参数:
-        -----
-        X : pd.DataFrame
-            输入特征
-            
-        返回:
-        -----
-        np.ndarray
-            预测值
-        """
+    def predict(
+        self, X: Union[np.ndarray, pd.DataFrame, pd.Series]
+    ) -> np.ndarray:
+        """使用训练好的模型进行预测"""
         if not self._fitted:
             raise RuntimeError("模型尚未训练，请先调用fit方法")
-        
+
+        X = ensure_pandas_dataframe(X, feature_names=self._feature_names)
+
         return self._best_expr.evaluate(X)
     
     def get_model_info(self) -> Dict:
