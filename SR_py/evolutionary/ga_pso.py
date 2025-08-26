@@ -11,6 +11,7 @@ import logging
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from ..utils.data_conversion import auto_convert_input, ensure_pandas_dataframe
 
 from ..dsl.expr import Expr, Var
 from ..gen.evaluator import FeatureEvaluator
@@ -288,7 +289,7 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
         
         return Individual(expr)
     
-    def fit(self, X: pd.DataFrame, y: pd.Series):
+    def fit(self, X, y):
         """
         训练GA-PSO符号回归模型
         
@@ -301,15 +302,17 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
             目标变量
         """
         logger.info("开始GA-PSO符号回归训练...")
-        
+
+        X_df, y_series = auto_convert_input(X, y)
+
         # 初始化组件
-        self._initialize_components(X)
-        
+        self._initialize_components(X_df)
+
         # 初始化种群
         self._population = self._initialize_population()
-        
+
         # 评估初始种群
-        self._evaluate_population(self._population, X, y)
+        self._evaluate_population(self._population, X_df, y_series)
         
         # 找到初始全局最优
         self._global_best_individual = min(self._population, key=lambda ind: ind.fitness)
@@ -354,7 +357,7 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
                 new_population = sorted(new_population, key=lambda ind: ind.fitness)[:self.population_size]
             
             # 评估新种群
-            self._evaluate_population(new_population, X, y)
+            self._evaluate_population(new_population, X_df, y_series)
             
             # 更新种群
             self._population = new_population
@@ -371,20 +374,20 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
         logger.info(f"训练完成，最佳适应度: {self._global_best_individual.fitness}")
         logger.info(f"最佳表达式: {self._global_best_individual.expression}")
 
-        self._train_X = X
-        self._train_y = y
+        self._train_X = X_df
+        self._train_y = y_series
         self._fitted = True
         return self
     
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+    def predict(self, X) -> np.ndarray:
         """
         使用训练好的模型进行预测
-        
+
         参数:
         -----
-        X : pd.DataFrame
+        X : array-like
             输入特征
-            
+
         返回:
         -----
         np.ndarray
@@ -392,11 +395,13 @@ class GAPSORegressor(BaseEstimator, RegressorMixin):
         """
         if not self._fitted:
             raise RuntimeError("模型尚未训练，请先调用fit方法")
-        
+
+        X_df = ensure_pandas_dataframe(X, feature_names=self._feature_names)
+
         # 评估最佳表达式
-        df_result, _ = self.evaluator.evaluate([self._global_best_individual.expression], X)
+        df_result, _ = self.evaluator.evaluate([self._global_best_individual.expression], X_df)
         expr_signature = self._global_best_individual.expression.get_signature()
-        
+
         return df_result[expr_signature].values
     
     def get_model_info(self) -> Dict:
