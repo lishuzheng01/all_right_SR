@@ -9,15 +9,15 @@ import pandas as pd
 from typing import Union, Tuple, Optional, List
 import warnings
 
-def ensure_pandas_dataframe(X: Union[np.ndarray, pd.DataFrame], 
+def ensure_pandas_dataframe(X: Union[np.ndarray, pd.DataFrame, pd.Series],
                           feature_names: Optional[List[str]] = None) -> pd.DataFrame:
     """
     确保输入是pandas DataFrame格式
     
     参数:
     -----
-    X : np.ndarray or pd.DataFrame
-        输入数据
+    X : np.ndarray, pd.DataFrame or pd.Series
+        输入数据。如果为Series，将被转换为单列DataFrame。
     feature_names : List[str], 可选
         特征名称列表
         
@@ -28,22 +28,25 @@ def ensure_pandas_dataframe(X: Union[np.ndarray, pd.DataFrame],
     """
     if isinstance(X, pd.DataFrame):
         return X
-    
+
+    # 处理pandas Series
+    if isinstance(X, pd.Series):
+        col_name = feature_names[0] if feature_names else (X.name or 'x')
+        return X.to_frame(name=col_name)
+
     # 处理numpy数组
     if isinstance(X, np.ndarray):
-        # 确保是二维数组
         if X.ndim == 1:
             X = X.reshape(-1, 1)
-            
-        # 生成特征名称
+
         if feature_names is None:
             if X.shape[1] == 1:
                 feature_names = ['x']
             else:
                 feature_names = [f'x{i}' for i in range(X.shape[1])]
-        
+
         return pd.DataFrame(X, columns=feature_names)
-    
+
     raise TypeError(f"不支持的输入类型: {type(X)}")
 
 def ensure_pandas_series(y: Union[np.ndarray, pd.Series, list], 
@@ -93,7 +96,7 @@ def ensure_numpy_array(data: Union[np.ndarray, pd.DataFrame, pd.Series]) -> np.n
     
     raise TypeError(f"不支持的数据类型: {type(data)}")
 
-def auto_convert_input(X: Union[np.ndarray, pd.DataFrame], 
+def auto_convert_input(X: Union[np.ndarray, pd.DataFrame, pd.Series],
                       y: Union[np.ndarray, pd.Series, list],
                       feature_names: Optional[List[str]] = None) -> Tuple[pd.DataFrame, pd.Series]:
     """
@@ -101,7 +104,7 @@ def auto_convert_input(X: Union[np.ndarray, pd.DataFrame],
     
     参数:
     -----
-    X : np.ndarray or pd.DataFrame
+    X : np.ndarray, pd.DataFrame or pd.Series
         特征数据
     y : np.ndarray, pd.Series, or list
         目标变量
@@ -126,14 +129,14 @@ def auto_convert_input(X: Union[np.ndarray, pd.DataFrame],
     
     return X_df, y_series
 
-def validate_input_shapes(X: Union[np.ndarray, pd.DataFrame], 
+def validate_input_shapes(X: Union[np.ndarray, pd.DataFrame, pd.Series],
                          y: Union[np.ndarray, pd.Series, list]) -> None:
     """
     验证输入数据的形状
     
     参数:
     -----
-    X : np.ndarray or pd.DataFrame
+    X : np.ndarray, pd.DataFrame or pd.Series
         特征数据
     y : np.ndarray, pd.Series, or list
         目标变量
