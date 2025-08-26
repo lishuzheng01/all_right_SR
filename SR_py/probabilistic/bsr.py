@@ -169,9 +169,16 @@ class BayesianSymbolicRegressor(BaseEstimator, RegressorMixin):
         
     n_chains : int, 默认=3
         MCMC链的数量，多链有助于评估收敛性
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.probabilistic.bsr import BayesianSymbolicRegressor
+    >>> model = BayesianSymbolicRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  n_iter: int = 10000,

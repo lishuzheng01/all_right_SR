@@ -13,11 +13,41 @@ import logging
 logger = logging.getLogger(__name__)
 
 class DeepSymbolicRegression(BaseEstimator, RegressorMixin):
-    """
-    深度学习驱动的符号回归方法
-    
-    使用神经网络编码器-解码器架构来生成符号表达式。
-    编码器学习数据的表示，解码器生成对应的符号表达式。
+    """Neural network driven symbolic regression.
+
+    A lightweight encoder/decoder architecture generates candidate symbolic
+    expressions. The network structure and training procedure can be tuned via
+    the constructor parameters.
+
+    Parameters
+    ----------
+    encoder_layers : list[int], default=[64, 32]
+        Width of hidden layers in the encoder network.
+    decoder_layers : list[int], default=[32, 64]
+        Width of hidden layers in the decoder network.
+    max_length : int, default=20
+        Maximum length of generated expressions.
+    epochs : int, default=50
+        Number of training epochs for the neural model.
+    batch_size : int, default=32
+        Number of expression samples evaluated per epoch.
+    learning_rate : float, default=0.001
+        Optimizer learning rate used during training.
+    dropout_rate : float, default=0.1
+        Dropout applied inside the network to mitigate overfitting.
+    vocabulary_size : int, default=100
+        Size of the symbol vocabulary used by the decoder.
+    embedding_dim : int, default=128
+        Dimension of token embeddings.
+    random_state : int, default=42
+        Seed controlling randomness of candidate generation.
+
+    Examples
+    --------
+    >>> from SR_py.neural_symbolic.deep_sr import DeepSymbolicRegression
+    >>> model = DeepSymbolicRegression()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     
     def __init__(self,

@@ -146,9 +146,16 @@ class LassoRegressor(BaseSparseSolver):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.lasso_ridge_omp import LassoRegressor
+    >>> model = LassoRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  alpha: float = 0.1,
@@ -473,9 +480,16 @@ class RidgeRegressor(BaseSparseSolver):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.lasso_ridge_omp import RidgeRegressor
+    >>> model = RidgeRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  alpha: float = 1.0,
@@ -727,9 +741,16 @@ class OMPRegressor(BaseSparseSolver):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.lasso_ridge_omp import OMPRegressor
+    >>> model = OMPRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  n_nonzero_coefs: Optional[int] = None,

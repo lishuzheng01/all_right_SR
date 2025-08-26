@@ -122,12 +122,19 @@ class ProbabilisticProgramInduction(BaseEstimator, RegressorMixin):
         
     elite_fraction : float, 默认=0.1
         精英比例
-        
+
     parsimony_coefficient : float, 默认=0.02
         简洁性系数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.probabilistic.ppi import ProbabilisticProgramInduction
+    >>> model = ProbabilisticProgramInduction()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  n_iterations: int = 1000,

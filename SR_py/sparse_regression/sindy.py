@@ -55,9 +55,16 @@ class SINDyRegressor(BaseEstimator, RegressorMixin):
         
     n_jobs : int, 默认=1
         并行作业数
-        
+
     random_state : int, 默认=42
         随机种子
+
+    示例:
+    -----
+    >>> from SR_py.sparse_regression.sindy import SINDyRegressor
+    >>> model = SINDyRegressor()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     def __init__(self,
                  poly_degree: int = 3,

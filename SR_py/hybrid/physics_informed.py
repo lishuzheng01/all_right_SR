@@ -13,11 +13,44 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PhysicsInformedSymbolicRegression(BaseEstimator, RegressorMixin):
-    """
-    结合物理约束和维度分析的符号回归方法
-    
-    确保生成的表达式满足物理定律（如守恒定律）和维度一致性，
-    提高符号回归结果的物理合理性。
+    """Physics-informed symbolic regression.
+
+    Generates expressions that respect user-specified physical constraints and
+    optional dimensional analysis checks to ensure the resulting formulas are
+    physically plausible.
+
+    Parameters
+    ----------
+    K : int, default=2
+        Feature complexity level used in the SISSO-style generation stage.
+    physical_constraints : list[str], default=['conservation_laws']
+        List of physical laws to enforce during feature selection.
+    dimensional_analysis : bool, default=True
+        Whether to enforce dimensional consistency.
+    constraint_weight : float, default=0.1
+        Weighting factor for constraint violation penalties.
+    sis_topk : int, default=100
+        Number of top features retained after screening.
+    so_max_terms : int, default=3
+        Maximum terms allowed in the final sparse model.
+    operators : list[str] or None, default=None
+        Operators available for feature construction. ``None`` uses a default
+        operator set.
+    max_depth : int, default=5
+        Maximum depth of expression trees during symbolic optimisation.
+    population_size : int, default=50
+        Population size for evolutionary search.
+    generations : int, default=30
+        Number of generations in the symbolic search stage.
+    random_state : int, default=42
+        Seed for reproducibility.
+
+    Examples
+    --------
+    >>> from SR_py.hybrid.physics_informed import PhysicsInformedSymbolicRegression
+    >>> model = PhysicsInformedSymbolicRegression()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     
     def __init__(self,

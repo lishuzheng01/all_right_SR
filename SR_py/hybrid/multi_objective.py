@@ -13,11 +13,43 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MultiObjectiveSymbolicRegression(BaseEstimator, RegressorMixin):
-    """
-    多目标符号回归方法
-    
-    同时优化多个目标（如准确性、复杂度、可解释性），
-    使用帕累托前沿寻找平衡的解决方案。
+    """Multi-objective symbolic regression.
+
+    Evolves expressions while optimising several criteria such as accuracy,
+    complexity and interpretability. A Pareto front is maintained to expose
+    trade-offs between objectives.
+
+    Parameters
+    ----------
+    objectives : list[str], default=['accuracy', 'complexity', 'interpretability']
+        Objectives to optimise. Supported values include ``'accuracy'``,
+        ``'complexity'`` and ``'interpretability'``.
+    population_size : int, default=50
+        Number of individuals in the population.
+    n_generations : int, default=20
+        Evolutionary generations to run.
+    pareto_front_size : int, default=10
+        Number of non-dominated solutions retained after evolution.
+    crossover_rate : float, default=0.8
+        Probability of exchanging subtrees during crossover.
+    mutation_rate : float, default=0.2
+        Probability of mutating an individual.
+    max_depth : int, default=6
+        Maximum depth for generated expression trees.
+    tournament_size : int, default=3
+        Size of tournament used for parent selection.
+    weights : list[float] or None, default=None
+        Optional weighting of objectives. If ``None`` the NSGA-II algorithm is
+        used to maintain diversity.
+    random_state : int, default=42
+        Random seed for reproducibility.
+
+    Examples
+    --------
+    >>> from SR_py.hybrid.multi_objective import MultiObjectiveSymbolicRegression
+    >>> model = MultiObjectiveSymbolicRegression()
+    >>> model.fit(X, y)
+    >>> print(model.explain())
     """
     
     def __init__(self,
